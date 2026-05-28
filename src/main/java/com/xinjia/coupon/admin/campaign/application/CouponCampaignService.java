@@ -1,5 +1,6 @@
 package com.xinjia.coupon.admin.campaign.application;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -63,6 +64,17 @@ public class CouponCampaignService {
         validateStatusChange(campaign, request.status());
         campaign.changeStatus(request.status());
         return couponCampaignRepository.save(campaign);
+    }
+
+    public void ensureReceivable(Long campaignId) {
+        CouponCampaign campaign = getById(campaignId);
+        if (campaign.getStatus() != CampaignStatus.RUNNING) {
+            throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "活动未开始或不可领取");
+        }
+        OffsetDateTime now = OffsetDateTime.now();
+        if (now.isBefore(campaign.getStartTime()) || now.isAfter(campaign.getEndTime())) {
+            throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "当前不在活动领取时间内");
+        }
     }
 
     private void validateTimeRange(CreateCouponCampaignRequest request) {
