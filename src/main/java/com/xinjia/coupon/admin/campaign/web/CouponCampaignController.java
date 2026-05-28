@@ -1,5 +1,10 @@
 package com.xinjia.coupon.admin.campaign.web;
 
+import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +29,30 @@ public class CouponCampaignController {
     @PostMapping
     public ApiResponse<CouponCampaignView> create(@Valid @RequestBody CreateCouponCampaignRequest request) {
         CouponCampaign campaign = couponCampaignService.create(request);
+        return ApiResponse.success(CouponCampaignView.from(campaign));
+    }
+
+    @GetMapping("/{campaignId}")
+    public ApiResponse<CouponCampaignView> getById(@PathVariable Long campaignId) {
+        CouponCampaign campaign = couponCampaignService.getById(campaignId);
+        return ApiResponse.success(CouponCampaignView.from(campaign));
+    }
+
+    @GetMapping
+    public ApiResponse<List<CouponCampaignView>> list() {
+        List<CouponCampaignView> campaigns = couponCampaignService.list()
+                .stream()
+                .map(CouponCampaignView::from)
+                .toList();
+        return ApiResponse.success(campaigns);
+    }
+
+    @PatchMapping("/{campaignId}/status")
+    public ApiResponse<CouponCampaignView> changeStatus(
+            @PathVariable Long campaignId,
+            @Valid @RequestBody UpdateCouponCampaignStatusRequest request
+    ) {
+        CouponCampaign campaign = couponCampaignService.changeStatus(campaignId, request);
         return ApiResponse.success(CouponCampaignView.from(campaign));
     }
 }

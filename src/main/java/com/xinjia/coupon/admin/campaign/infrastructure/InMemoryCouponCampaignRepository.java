@@ -1,5 +1,8 @@
 package com.xinjia.coupon.admin.campaign.infrastructure;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -21,5 +24,18 @@ public class InMemoryCouponCampaignRepository implements CouponCampaignRepositor
         }
         campaigns.put(campaign.getId(), campaign);
         return campaign;
+    }
+
+    @Override
+    public Optional<CouponCampaign> findById(Long id) {
+        return Optional.ofNullable(campaigns.get(id));
+    }
+
+    @Override
+    public List<CouponCampaign> findAll() {
+        return campaigns.values()
+                .stream()
+                .sorted(Comparator.comparing(CouponCampaign::getId).reversed())
+                .toList();
     }
 }
