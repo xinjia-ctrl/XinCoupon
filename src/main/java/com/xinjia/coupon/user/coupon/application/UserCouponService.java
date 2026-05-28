@@ -1,5 +1,7 @@
 package com.xinjia.coupon.user.coupon.application;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import com.xinjia.coupon.admin.campaign.application.CouponCampaignService;
@@ -39,5 +41,9 @@ public class UserCouponService {
                 template.getValidEndTime()
         );
         return userCouponRepository.save(userCoupon);
+    }
+
+    public List<UserCoupon> listByUserId(Long userId) {
+        return userCouponRepository.findByUserId(userId);
     }
 }

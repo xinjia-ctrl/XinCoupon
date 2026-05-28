@@ -64,6 +64,15 @@ class UserCouponServiceTests {
                 .hasMessage("活动未开始或不可领取");
     }
 
+    @Test
+    void listByUserIdShouldReturnUserCoupons() {
+        CouponCampaign campaign = createRunningCampaign();
+        userCouponService.receive(new ReceiveCouponRequest(10L, campaign.getId()));
+
+        assertThat(userCouponService.listByUserId(10L)).hasSize(1);
+        assertThat(userCouponService.listByUserId(11L)).isEmpty();
+    }
+
     private CouponCampaign createRunningCampaign() {
         CouponTemplate template = createTemplate();
         CouponCampaign campaign = couponCampaignService.create(validCampaignRequest(template.getId()));

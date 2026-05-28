@@ -1,5 +1,7 @@
 package com.xinjia.coupon.user.coupon.infrastructure;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -21,5 +23,14 @@ public class InMemoryUserCouponRepository implements UserCouponRepository {
         }
         userCoupons.put(userCoupon.getId(), userCoupon);
         return userCoupon;
+    }
+
+    @Override
+    public List<UserCoupon> findByUserId(Long userId) {
+        return userCoupons.values()
+                .stream()
+                .filter(userCoupon -> userCoupon.getUserId().equals(userId))
+                .sorted(Comparator.comparing(UserCoupon::getReceivedAt).reversed())
+                .toList();
     }
 }

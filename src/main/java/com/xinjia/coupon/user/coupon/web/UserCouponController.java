@@ -1,6 +1,10 @@
 package com.xinjia.coupon.user.coupon.web;
 
+import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,5 +29,14 @@ public class UserCouponController {
     public ApiResponse<UserCouponView> receive(@Valid @RequestBody ReceiveCouponRequest request) {
         UserCoupon userCoupon = userCouponService.receive(request);
         return ApiResponse.success(UserCouponView.from(userCoupon));
+    }
+
+    @GetMapping
+    public ApiResponse<List<UserCouponView>> listByUserId(@RequestParam Long userId) {
+        List<UserCouponView> userCoupons = userCouponService.listByUserId(userId)
+                .stream()
+                .map(UserCouponView::from)
+                .toList();
+        return ApiResponse.success(userCoupons);
     }
 }
