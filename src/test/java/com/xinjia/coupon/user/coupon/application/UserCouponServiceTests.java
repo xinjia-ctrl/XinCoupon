@@ -73,6 +73,16 @@ class UserCouponServiceTests {
         assertThat(userCouponService.listByUserId(11L)).isEmpty();
     }
 
+    @Test
+    void receiveShouldRejectWhenUserExceedsCampaignLimit() {
+        CouponCampaign campaign = createRunningCampaign();
+        userCouponService.receive(new ReceiveCouponRequest(10L, campaign.getId()));
+
+        assertThatThrownBy(() -> userCouponService.receive(new ReceiveCouponRequest(10L, campaign.getId())))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("用户已达到该活动领取上限");
+    }
+
     private CouponCampaign createRunningCampaign() {
         CouponTemplate template = createTemplate();
         CouponCampaign campaign = couponCampaignService.create(validCampaignRequest(template.getId()));

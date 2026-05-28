@@ -8,6 +8,8 @@ import com.xinjia.coupon.admin.campaign.application.CouponCampaignService;
 import com.xinjia.coupon.admin.campaign.domain.CouponCampaign;
 import com.xinjia.coupon.admin.template.application.CouponTemplateService;
 import com.xinjia.coupon.admin.template.domain.CouponTemplate;
+import com.xinjia.coupon.common.enums.ErrorCode;
+import com.xinjia.coupon.common.exception.BusinessException;
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 import com.xinjia.coupon.user.coupon.infrastructure.UserCouponRepository;
 import com.xinjia.coupon.user.coupon.web.ReceiveCouponRequest;
@@ -32,6 +34,7 @@ public class UserCouponService {
     public UserCoupon receive(ReceiveCouponRequest request) {
         couponCampaignService.ensureReceivable(request.campaignId());
         CouponCampaign campaign = couponCampaignService.getById(request.campaignId());
+        validateReceiveLimit(request.userId(), campaign);
         CouponTemplate template = couponTemplateService.getById(campaign.getTemplateId());
 
         UserCoupon userCoupon = UserCoupon.receive(
@@ -45,5 +48,12 @@ public class UserCouponService {
 
     public List<UserCoupon> listByUserId(Long userId) {
         return userCouponRepository.findByUserId(userId);
+    }
+
+    private void validateReceiveLimit(Long userId, CouponCampaign campaign) {
+        long receivedCount = userCouponRepository.countByUserIdAndCampaignId(userId, campaign.getId());
+        if (receivedCount >= campaign.getPerUserLimit()) {
+            throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "用户已达到该活动领取上限");
+        }
     }
 }

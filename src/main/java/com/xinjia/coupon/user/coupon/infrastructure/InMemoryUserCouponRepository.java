@@ -33,4 +33,13 @@ public class InMemoryUserCouponRepository implements UserCouponRepository {
                 .sorted(Comparator.comparing(UserCoupon::getReceivedAt).reversed())
                 .toList();
     }
+
+    @Override
+    public long countByUserIdAndCampaignId(Long userId, Long campaignId) {
+        return userCoupons.values()
+                .stream()
+                .filter(userCoupon -> userCoupon.getUserId().equals(userId))
+                .filter(userCoupon -> userCoupon.getCampaignId().equals(campaignId))
+                .count();
+    }
 }

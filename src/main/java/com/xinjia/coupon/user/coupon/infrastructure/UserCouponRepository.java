@@ -9,4 +9,6 @@ public interface UserCouponRepository {
     UserCoupon save(UserCoupon userCoupon);
 
     List<UserCoupon> findByUserId(Long userId);
+
+    long countByUserIdAndCampaignId(Long userId, Long campaignId);
 }
