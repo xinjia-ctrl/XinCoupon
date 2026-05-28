@@ -1,5 +1,8 @@
 package com.xinjia.coupon.admin.template.infrastructure;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -21,5 +24,18 @@ public class InMemoryCouponTemplateRepository implements CouponTemplateRepositor
         }
         templates.put(template.getId(), template);
         return template;
+    }
+
+    @Override
+    public Optional<CouponTemplate> findById(Long id) {
+        return Optional.ofNullable(templates.get(id));
+    }
+
+    @Override
+    public List<CouponTemplate> findAll() {
+        return templates.values()
+                .stream()
+                .sorted(Comparator.comparing(CouponTemplate::getId).reversed())
+                .toList();
     }
 }

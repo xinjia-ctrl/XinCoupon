@@ -1,10 +1,13 @@
 package com.xinjia.coupon.admin.template.application;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 import com.xinjia.coupon.admin.template.domain.CouponTemplate;
 import com.xinjia.coupon.admin.template.infrastructure.CouponTemplateRepository;
 import com.xinjia.coupon.admin.template.web.CreateCouponTemplateRequest;
+import com.xinjia.coupon.admin.template.web.UpdateCouponTemplateStatusRequest;
 import com.xinjia.coupon.common.enums.CouponType;
 import com.xinjia.coupon.common.enums.ErrorCode;
 import com.xinjia.coupon.common.exception.BusinessException;
@@ -33,6 +36,21 @@ public class CouponTemplateService {
                 request.validEndTime(),
                 request.totalStock()
         );
+        return couponTemplateRepository.save(template);
+    }
+
+    public CouponTemplate getById(Long templateId) {
+        return couponTemplateRepository.findById(templateId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "优惠券模板不存在"));
+    }
+
+    public List<CouponTemplate> list() {
+        return couponTemplateRepository.findAll();
+    }
+
+    public CouponTemplate changeStatus(Long templateId, UpdateCouponTemplateStatusRequest request) {
+        CouponTemplate template = getById(templateId);
+        template.changeStatus(request.status());
         return couponTemplateRepository.save(template);
     }
 
