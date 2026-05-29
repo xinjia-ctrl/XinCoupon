@@ -49,6 +49,15 @@ public class UserCouponService {
         CouponCampaign campaign = couponCampaignService.getById(request.campaignId());
         validateReceiveLimit(request.userId(), campaign);
         deductStock(campaign.getId());
+        try {
+            return createUserCoupon(request, campaign);
+        } catch (RuntimeException exception) {
+            campaignStockCache.restoreStock(campaign.getId());
+            throw exception;
+        }
+    }
+
+    private UserCoupon createUserCoupon(ReceiveCouponRequest request, CouponCampaign campaign) {
         CouponTemplate template = couponTemplateService.getById(campaign.getTemplateId());
 
         UserCoupon userCoupon = UserCoupon.receive(

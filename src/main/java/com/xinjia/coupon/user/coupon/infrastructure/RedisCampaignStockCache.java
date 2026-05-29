@@ -47,6 +47,11 @@ public class RedisCampaignStockCache implements CampaignStockCache {
         return Long.valueOf(1L).equals(result);
     }
 
+    @Override
+    public void restoreStock(Long campaignId) {
+        stringRedisTemplate.opsForValue().increment(buildStockKey(campaignId));
+    }
+
     private String buildStockKey(Long campaignId) {
         return redisCacheProperties.buildKey(CAMPAIGN_STOCK_KEY + campaignId);
     }

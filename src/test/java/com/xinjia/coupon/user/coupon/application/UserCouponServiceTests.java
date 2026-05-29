@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ import com.xinjia.coupon.support.InMemoryCampaignStockCache;
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 import com.xinjia.coupon.user.coupon.infrastructure.InMemoryUserCouponRepository;
 import com.xinjia.coupon.user.coupon.infrastructure.InMemoryReceiveRequestRepository;
+import com.xinjia.coupon.user.coupon.infrastructure.UserCouponRepository;
 import com.xinjia.coupon.user.coupon.web.ReceiveCouponRequest;
 
 class UserCouponServiceTests {
@@ -115,6 +117,24 @@ class UserCouponServiceTests {
         assertThat(campaignStockCache.getStock(campaign.getId())).isEqualTo(499);
     }
 
+    @Test
+    void receiveShouldRestoreStockWhenUserCouponSaveFailed() {
+        CouponCampaign campaign = createRunningCampaign();
+        UserCouponService failingService = new UserCouponService(
+                new FailingUserCouponRepository(),
+                couponCampaignService,
+                couponTemplateService,
+                campaignStockCache,
+                new InMemoryReceiveRequestRepository()
+        );
+
+        assertThatThrownBy(() -> failingService.receive(receiveRequest("req-fail", 10L, campaign.getId())))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("保存用户券失败");
+
+        assertThat(campaignStockCache.getStock(campaign.getId())).isEqualTo(500);
+    }
+
     private ReceiveCouponRequest receiveRequest(String requestId, Long userId, Long campaignId) {
         return new ReceiveCouponRequest(requestId, userId, campaignId);
     }
@@ -160,5 +180,23 @@ class UserCouponServiceTests {
                 OffsetDateTime.now().minusHours(1),
                 OffsetDateTime.now().plusDays(10)
         );
+    }
+
+    private static class FailingUserCouponRepository implements UserCouponRepository {
+
+        @Override
+        public UserCoupon save(UserCoupon userCoupon) {
+            throw new IllegalStateException("保存用户券失败");
+        }
+
+        @Override
+        public List<UserCoupon> findByUserId(Long userId) {
+            return List.of();
+        }
+
+        @Override
+        public long countByUserIdAndCampaignId(Long userId, Long campaignId) {
+            return 0;
+        }
     }
 }

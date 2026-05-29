@@ -32,6 +32,11 @@ public class InMemoryCampaignStockCache implements CampaignStockCache {
         }
     }
 
+    @Override
+    public void restoreStock(Long campaignId) {
+        stocks.computeIfAbsent(campaignId, ignored -> new AtomicInteger()).incrementAndGet();
+    }
+
     public Integer getStock(Long campaignId) {
         AtomicInteger stock = stocks.get(campaignId);
         return stock == null ? null : stock.get();
