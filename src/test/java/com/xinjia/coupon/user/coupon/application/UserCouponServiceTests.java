@@ -30,20 +30,23 @@ class UserCouponServiceTests {
 
     private CouponTemplateService couponTemplateService;
     private CouponCampaignService couponCampaignService;
+    private InMemoryCampaignStockCache campaignStockCache;
     private UserCouponService userCouponService;
 
     @BeforeEach
     void setUp() {
         couponTemplateService = new CouponTemplateService(new InMemoryCouponTemplateRepository());
+        campaignStockCache = new InMemoryCampaignStockCache();
         couponCampaignService = new CouponCampaignService(
                 new InMemoryCouponCampaignRepository(),
                 couponTemplateService,
-                new InMemoryCampaignStockCache()
+                campaignStockCache
         );
         userCouponService = new UserCouponService(
                 new InMemoryUserCouponRepository(),
                 couponCampaignService,
-                couponTemplateService
+                couponTemplateService,
+                campaignStockCache
         );
     }
 
@@ -57,6 +60,7 @@ class UserCouponServiceTests {
         assertThat(userCoupon.getUserId()).isEqualTo(10L);
         assertThat(userCoupon.getCampaignId()).isEqualTo(campaign.getId());
         assertThat(userCoupon.getStatus()).isEqualTo(UserCouponStatus.RECEIVED);
+        assertThat(campaignStockCache.getStock(campaign.getId())).isEqualTo(499);
     }
 
     @Test
@@ -88,9 +92,23 @@ class UserCouponServiceTests {
                 .hasMessage("用户已达到该活动领取上限");
     }
 
+    @Test
+    void receiveShouldRejectWhenCampaignStockIsEmpty() {
+        CouponCampaign campaign = createRunningCampaign(1);
+        userCouponService.receive(new ReceiveCouponRequest(10L, campaign.getId()));
+
+        assertThatThrownBy(() -> userCouponService.receive(new ReceiveCouponRequest(11L, campaign.getId())))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("活动库存不足");
+    }
+
     private CouponCampaign createRunningCampaign() {
+        return createRunningCampaign(500);
+    }
+
+    private CouponCampaign createRunningCampaign(Integer stock) {
         CouponTemplate template = createTemplate();
-        CouponCampaign campaign = couponCampaignService.create(validCampaignRequest(template.getId()));
+        CouponCampaign campaign = couponCampaignService.create(validCampaignRequest(template.getId(), stock));
         return couponCampaignService.changeStatus(
                 campaign.getId(),
                 new UpdateCouponCampaignStatusRequest(CampaignStatus.RUNNING)
@@ -112,11 +130,15 @@ class UserCouponServiceTests {
     }
 
     private CreateCouponCampaignRequest validCampaignRequest(Long templateId) {
+        return validCampaignRequest(templateId, 500);
+    }
+
+    private CreateCouponCampaignRequest validCampaignRequest(Long templateId, Integer stock) {
         return new CreateCouponCampaignRequest(
                 templateId,
                 1L,
                 "六月新人发券活动",
-                500,
+                stock,
                 1,
                 OffsetDateTime.now().minusHours(1),
                 OffsetDateTime.now().plusDays(10)
