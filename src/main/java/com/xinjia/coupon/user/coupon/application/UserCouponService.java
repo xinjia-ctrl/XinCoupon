@@ -12,6 +12,7 @@ import com.xinjia.coupon.common.enums.ErrorCode;
 import com.xinjia.coupon.common.exception.BusinessException;
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 import com.xinjia.coupon.user.coupon.infrastructure.CampaignStockCache;
+import com.xinjia.coupon.user.coupon.infrastructure.ReceiveRequestRepository;
 import com.xinjia.coupon.user.coupon.infrastructure.UserCouponRepository;
 import com.xinjia.coupon.user.coupon.web.ReceiveCouponRequest;
 
@@ -22,20 +23,28 @@ public class UserCouponService {
     private final CouponCampaignService couponCampaignService;
     private final CouponTemplateService couponTemplateService;
     private final CampaignStockCache campaignStockCache;
+    private final ReceiveRequestRepository receiveRequestRepository;
 
     public UserCouponService(
             UserCouponRepository userCouponRepository,
             CouponCampaignService couponCampaignService,
             CouponTemplateService couponTemplateService,
-            CampaignStockCache campaignStockCache
+            CampaignStockCache campaignStockCache,
+            ReceiveRequestRepository receiveRequestRepository
     ) {
         this.userCouponRepository = userCouponRepository;
         this.couponCampaignService = couponCampaignService;
         this.couponTemplateService = couponTemplateService;
         this.campaignStockCache = campaignStockCache;
+        this.receiveRequestRepository = receiveRequestRepository;
     }
 
     public UserCoupon receive(ReceiveCouponRequest request) {
+        return receiveRequestRepository.findResult(request.requestId())
+                .orElseGet(() -> doReceive(request));
+    }
+
+    private UserCoupon doReceive(ReceiveCouponRequest request) {
         couponCampaignService.ensureReceivable(request.campaignId());
         CouponCampaign campaign = couponCampaignService.getById(request.campaignId());
         validateReceiveLimit(request.userId(), campaign);
@@ -48,7 +57,9 @@ public class UserCouponService {
                 campaign.getId(),
                 template.getValidEndTime()
         );
-        return userCouponRepository.save(userCoupon);
+        UserCoupon saved = userCouponRepository.save(userCoupon);
+        receiveRequestRepository.saveResult(request.requestId(), saved);
+        return saved;
     }
 
     public List<UserCoupon> listByUserId(Long userId) {

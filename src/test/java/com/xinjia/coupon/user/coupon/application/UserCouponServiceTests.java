@@ -24,6 +24,7 @@ import com.xinjia.coupon.common.exception.BusinessException;
 import com.xinjia.coupon.support.InMemoryCampaignStockCache;
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 import com.xinjia.coupon.user.coupon.infrastructure.InMemoryUserCouponRepository;
+import com.xinjia.coupon.user.coupon.infrastructure.InMemoryReceiveRequestRepository;
 import com.xinjia.coupon.user.coupon.web.ReceiveCouponRequest;
 
 class UserCouponServiceTests {
@@ -46,7 +47,8 @@ class UserCouponServiceTests {
                 new InMemoryUserCouponRepository(),
                 couponCampaignService,
                 couponTemplateService,
-                campaignStockCache
+                campaignStockCache,
+                new InMemoryReceiveRequestRepository()
         );
     }
 
@@ -54,7 +56,7 @@ class UserCouponServiceTests {
     void receiveShouldCreateUserCoupon() {
         CouponCampaign campaign = createRunningCampaign();
 
-        UserCoupon userCoupon = userCouponService.receive(new ReceiveCouponRequest(10L, campaign.getId()));
+        UserCoupon userCoupon = userCouponService.receive(receiveRequest("req-1", 10L, campaign.getId()));
 
         assertThat(userCoupon.getId()).isNotNull();
         assertThat(userCoupon.getUserId()).isEqualTo(10L);
@@ -68,7 +70,7 @@ class UserCouponServiceTests {
         CouponTemplate template = createTemplate();
         CouponCampaign campaign = couponCampaignService.create(validCampaignRequest(template.getId()));
 
-        assertThatThrownBy(() -> userCouponService.receive(new ReceiveCouponRequest(10L, campaign.getId())))
+        assertThatThrownBy(() -> userCouponService.receive(receiveRequest("req-2", 10L, campaign.getId())))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("活动未开始或不可领取");
     }
@@ -76,7 +78,7 @@ class UserCouponServiceTests {
     @Test
     void listByUserIdShouldReturnUserCoupons() {
         CouponCampaign campaign = createRunningCampaign();
-        userCouponService.receive(new ReceiveCouponRequest(10L, campaign.getId()));
+        userCouponService.receive(receiveRequest("req-3", 10L, campaign.getId()));
 
         assertThat(userCouponService.listByUserId(10L)).hasSize(1);
         assertThat(userCouponService.listByUserId(11L)).isEmpty();
@@ -85,9 +87,9 @@ class UserCouponServiceTests {
     @Test
     void receiveShouldRejectWhenUserExceedsCampaignLimit() {
         CouponCampaign campaign = createRunningCampaign();
-        userCouponService.receive(new ReceiveCouponRequest(10L, campaign.getId()));
+        userCouponService.receive(receiveRequest("req-4", 10L, campaign.getId()));
 
-        assertThatThrownBy(() -> userCouponService.receive(new ReceiveCouponRequest(10L, campaign.getId())))
+        assertThatThrownBy(() -> userCouponService.receive(receiveRequest("req-5", 10L, campaign.getId())))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("用户已达到该活动领取上限");
     }
@@ -95,11 +97,26 @@ class UserCouponServiceTests {
     @Test
     void receiveShouldRejectWhenCampaignStockIsEmpty() {
         CouponCampaign campaign = createRunningCampaign(1);
-        userCouponService.receive(new ReceiveCouponRequest(10L, campaign.getId()));
+        userCouponService.receive(receiveRequest("req-6", 10L, campaign.getId()));
 
-        assertThatThrownBy(() -> userCouponService.receive(new ReceiveCouponRequest(11L, campaign.getId())))
+        assertThatThrownBy(() -> userCouponService.receive(receiveRequest("req-7", 11L, campaign.getId())))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("活动库存不足");
+    }
+
+    @Test
+    void receiveShouldReturnSameCouponWhenRequestIdRepeated() {
+        CouponCampaign campaign = createRunningCampaign();
+
+        UserCoupon first = userCouponService.receive(receiveRequest("req-repeat", 10L, campaign.getId()));
+        UserCoupon second = userCouponService.receive(receiveRequest("req-repeat", 10L, campaign.getId()));
+
+        assertThat(second.getId()).isEqualTo(first.getId());
+        assertThat(campaignStockCache.getStock(campaign.getId())).isEqualTo(499);
+    }
+
+    private ReceiveCouponRequest receiveRequest(String requestId, Long userId, Long campaignId) {
+        return new ReceiveCouponRequest(requestId, userId, campaignId);
     }
 
     private CouponCampaign createRunningCampaign() {
