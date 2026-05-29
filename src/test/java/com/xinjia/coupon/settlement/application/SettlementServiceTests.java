@@ -64,7 +64,9 @@ class SettlementServiceTests {
 
         assertThat(result.availableCoupons()).hasSize(1);
         assertThat(result.availableCoupons().get(0).templateId()).isEqualTo(template.getId());
-        assertThat(result.payableAmount()).isEqualTo(5000L);
+        assertThat(result.availableCoupons().get(0).calculatedDiscountAmount()).isEqualTo(500L);
+        assertThat(result.bestDiscountAmount()).isEqualTo(500L);
+        assertThat(result.payableAmount()).isEqualTo(4500L);
     }
 
     @Test
@@ -77,6 +79,24 @@ class SettlementServiceTests {
         assertThat(settlementService.calculate(calculateRequest(10L, 1L, 2000L)).availableCoupons()).isEmpty();
     }
 
+    @Test
+    void calculateShouldChooseBestDiscountCoupon() {
+        CouponTemplate fullReductionTemplate = createTemplate(1L, 3000L, 500L);
+        CouponTemplate discountTemplate = createDiscountTemplate(1L, 85);
+        CouponCampaign fullReductionCampaign = createRunningCampaign(fullReductionTemplate.getId());
+        CouponCampaign discountCampaign = createRunningCampaign(discountTemplate.getId());
+        userCouponService.receive(new ReceiveCouponRequest("settle-req-3", 10L, fullReductionCampaign.getId()));
+        userCouponService.receive(new ReceiveCouponRequest("settle-req-4", 10L, discountCampaign.getId()));
+
+        SettlementCalculateView result = settlementService.calculate(calculateRequest(10L, 1L, 5000L));
+
+        assertThat(result.availableCoupons()).hasSize(2);
+        assertThat(result.bestCoupon()).isNotNull();
+        assertThat(result.bestCoupon().templateId()).isEqualTo(discountTemplate.getId());
+        assertThat(result.bestDiscountAmount()).isEqualTo(750L);
+        assertThat(result.payableAmount()).isEqualTo(4250L);
+    }
+
     private CouponTemplate createTemplate(Long merchantId, Long thresholdAmount, Long discountAmount) {
         return couponTemplateService.create(new CreateCouponTemplateRequest(
                 merchantId,
@@ -85,6 +105,20 @@ class SettlementServiceTests {
                 discountAmount,
                 null,
                 thresholdAmount,
+                OffsetDateTime.now().minusDays(1),
+                OffsetDateTime.now().plusDays(30),
+                1000
+        ));
+    }
+
+    private CouponTemplate createDiscountTemplate(Long merchantId, Integer discountRate) {
+        return couponTemplateService.create(new CreateCouponTemplateRequest(
+                merchantId,
+                "订单折扣券",
+                CouponType.DISCOUNT,
+                null,
+                discountRate,
+                0L,
                 OffsetDateTime.now().minusDays(1),
                 OffsetDateTime.now().plusDays(30),
                 1000
