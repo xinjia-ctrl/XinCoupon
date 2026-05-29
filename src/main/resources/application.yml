@@ -3,9 +3,19 @@ spring:
     name: xin-coupon
   profiles:
     active: dev
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
   jackson:
     time-zone: Asia/Shanghai
     date-format: yyyy-MM-dd HH:mm:ss
+
+framework:
+  cache:
+    redis:
+      prefix: ${CACHE_REDIS_PREFIX:xin-coupon:}
 
 server:
   port: 8080

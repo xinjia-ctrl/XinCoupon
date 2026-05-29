@@ -14,6 +14,7 @@ import com.xinjia.coupon.admin.template.application.CouponTemplateService;
 import com.xinjia.coupon.common.enums.CampaignStatus;
 import com.xinjia.coupon.common.enums.ErrorCode;
 import com.xinjia.coupon.common.exception.BusinessException;
+import com.xinjia.coupon.user.coupon.infrastructure.CampaignStockCache;
 
 @Service
 public class CouponCampaignService {
@@ -25,13 +26,16 @@ public class CouponCampaignService {
 
     private final CouponCampaignRepository couponCampaignRepository;
     private final CouponTemplateService couponTemplateService;
+    private final CampaignStockCache campaignStockCache;
 
     public CouponCampaignService(
             CouponCampaignRepository couponCampaignRepository,
-            CouponTemplateService couponTemplateService
+            CouponTemplateService couponTemplateService,
+            CampaignStockCache campaignStockCache
     ) {
         this.couponCampaignRepository = couponCampaignRepository;
         this.couponTemplateService = couponTemplateService;
+        this.campaignStockCache = campaignStockCache;
     }
 
     public CouponCampaign create(CreateCouponCampaignRequest request) {
@@ -47,7 +51,9 @@ public class CouponCampaignService {
                 request.startTime(),
                 request.endTime()
         );
-        return couponCampaignRepository.save(campaign);
+        CouponCampaign saved = couponCampaignRepository.save(campaign);
+        campaignStockCache.initializeStock(saved.getId(), saved.getCampaignStock());
+        return saved;
     }
 
     public CouponCampaign getById(Long campaignId) {

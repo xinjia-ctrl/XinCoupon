@@ -21,6 +21,7 @@ import com.xinjia.coupon.common.enums.CampaignStatus;
 import com.xinjia.coupon.common.enums.CouponType;
 import com.xinjia.coupon.common.enums.UserCouponStatus;
 import com.xinjia.coupon.common.exception.BusinessException;
+import com.xinjia.coupon.support.InMemoryCampaignStockCache;
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 import com.xinjia.coupon.user.coupon.infrastructure.InMemoryUserCouponRepository;
 import com.xinjia.coupon.user.coupon.web.ReceiveCouponRequest;
@@ -34,7 +35,11 @@ class UserCouponServiceTests {
     @BeforeEach
     void setUp() {
         couponTemplateService = new CouponTemplateService(new InMemoryCouponTemplateRepository());
-        couponCampaignService = new CouponCampaignService(new InMemoryCouponCampaignRepository(), couponTemplateService);
+        couponCampaignService = new CouponCampaignService(
+                new InMemoryCouponCampaignRepository(),
+                couponTemplateService,
+                new InMemoryCampaignStockCache()
+        );
         userCouponService = new UserCouponService(
                 new InMemoryUserCouponRepository(),
                 couponCampaignService,

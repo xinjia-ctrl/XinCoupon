@@ -19,6 +19,7 @@ import com.xinjia.coupon.admin.template.web.CreateCouponTemplateRequest;
 import com.xinjia.coupon.common.enums.CampaignStatus;
 import com.xinjia.coupon.common.enums.CouponType;
 import com.xinjia.coupon.common.exception.BusinessException;
+import com.xinjia.coupon.support.InMemoryCampaignStockCache;
 
 class CouponCampaignServiceTests {
 
@@ -30,7 +31,8 @@ class CouponCampaignServiceTests {
         couponTemplateService = new CouponTemplateService(new InMemoryCouponTemplateRepository());
         couponCampaignService = new CouponCampaignService(
                 new InMemoryCouponCampaignRepository(),
-                couponTemplateService
+                couponTemplateService,
+                new InMemoryCampaignStockCache()
         );
     }
 
