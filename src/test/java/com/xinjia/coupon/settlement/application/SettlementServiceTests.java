@@ -19,6 +19,11 @@ import com.xinjia.coupon.admin.template.infrastructure.InMemoryCouponTemplateRep
 import com.xinjia.coupon.admin.template.web.CreateCouponTemplateRequest;
 import com.xinjia.coupon.common.enums.CampaignStatus;
 import com.xinjia.coupon.common.enums.CouponType;
+import com.xinjia.coupon.common.enums.UserCouponStatus;
+import com.xinjia.coupon.settlement.web.CouponCancelRequest;
+import com.xinjia.coupon.settlement.web.CouponConfirmRequest;
+import com.xinjia.coupon.settlement.web.CouponLockRequest;
+import com.xinjia.coupon.settlement.web.CouponOperationView;
 import com.xinjia.coupon.settlement.web.OrderItemRequest;
 import com.xinjia.coupon.settlement.web.SettlementCalculateRequest;
 import com.xinjia.coupon.settlement.web.SettlementCalculateView;
@@ -27,6 +32,7 @@ import com.xinjia.coupon.user.coupon.application.UserCouponService;
 import com.xinjia.coupon.user.coupon.infrastructure.InMemoryReceiveRequestRepository;
 import com.xinjia.coupon.user.coupon.infrastructure.InMemoryUserCouponRepository;
 import com.xinjia.coupon.user.coupon.web.ReceiveCouponRequest;
+import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 
 class SettlementServiceTests {
 
@@ -97,6 +103,55 @@ class SettlementServiceTests {
         assertThat(result.payableAmount()).isEqualTo(4250L);
     }
 
+    @Test
+    void lockShouldChangeUserCouponToLocked() {
+        UserCoupon userCoupon = receiveCoupon("settle-req-5", 10L);
+
+        CouponOperationView result = settlementService.lock(new CouponLockRequest(
+                10L,
+                userCoupon.getId(),
+                "ORDER-LOCK-1"
+        ));
+
+        assertThat(result.status()).isEqualTo(UserCouponStatus.LOCKED);
+        assertThat(result.orderNo()).isEqualTo("ORDER-LOCK-1");
+        assertThat(result.lockedAt()).isNotNull();
+    }
+
+    @Test
+    void confirmShouldMarkLockedCouponUsed() {
+        UserCoupon userCoupon = receiveCoupon("settle-req-6", 10L);
+        settlementService.lock(new CouponLockRequest(10L, userCoupon.getId(), "ORDER-CONFIRM-1"));
+
+        CouponOperationView result = settlementService.confirm(new CouponConfirmRequest(
+                10L,
+                userCoupon.getId(),
+                "ORDER-CONFIRM-1"
+        ));
+
+        assertThat(result.status()).isEqualTo(UserCouponStatus.USED);
+        assertThat(result.usedAt()).isNotNull();
+    }
+
+    @Test
+    void cancelShouldReleaseLockedCouponAndMakeItAvailableAgain() {
+        UserCoupon userCoupon = receiveCoupon("settle-req-7", 10L);
+        settlementService.lock(new CouponLockRequest(10L, userCoupon.getId(), "ORDER-CANCEL-1"));
+
+        CouponOperationView result = settlementService.cancel(new CouponCancelRequest(
+                10L,
+                userCoupon.getId(),
+                "ORDER-CANCEL-1"
+        ));
+
+        SettlementCalculateView calculateResult = settlementService.calculate(calculateRequest(10L, 1L, 5000L));
+
+        assertThat(result.status()).isEqualTo(UserCouponStatus.RECEIVED);
+        assertThat(result.orderNo()).isNull();
+        assertThat(calculateResult.availableCoupons()).hasSize(1);
+        assertThat(calculateResult.availableCoupons().get(0).userCouponId()).isEqualTo(userCoupon.getId());
+    }
+
     private CouponTemplate createTemplate(Long merchantId, Long thresholdAmount, Long discountAmount) {
         return couponTemplateService.create(new CreateCouponTemplateRequest(
                 merchantId,
@@ -139,6 +194,12 @@ class SettlementServiceTests {
                 campaign.getId(),
                 new UpdateCouponCampaignStatusRequest(CampaignStatus.RUNNING)
         );
+    }
+
+    private UserCoupon receiveCoupon(String requestId, Long userId) {
+        CouponTemplate template = createTemplate(1L, 3000L, 500L);
+        CouponCampaign campaign = createRunningCampaign(template.getId());
+        return userCouponService.receive(new ReceiveCouponRequest(requestId, userId, campaign.getId()));
     }
 
     private SettlementCalculateRequest calculateRequest(Long userId, Long merchantId, Long orderAmount) {
