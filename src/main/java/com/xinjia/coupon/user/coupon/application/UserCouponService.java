@@ -89,11 +89,34 @@ public class UserCouponService {
         return userCouponRepository.save(userCoupon);
     }
 
+    public UserCoupon confirm(Long userId, Long userCouponId, String orderNo) {
+        UserCoupon userCoupon = getLockedCoupon(userId, userCouponId, orderNo);
+        userCoupon.confirmUse();
+        return userCouponRepository.save(userCoupon);
+    }
+
+    public UserCoupon cancel(Long userId, Long userCouponId, String orderNo) {
+        UserCoupon userCoupon = getLockedCoupon(userId, userCouponId, orderNo);
+        userCoupon.release();
+        return userCouponRepository.save(userCoupon);
+    }
+
     private UserCoupon getOwnedCoupon(Long userId, Long userCouponId) {
         UserCoupon userCoupon = userCouponRepository.findById(userCouponId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "用户优惠券不存在"));
         if (!userCoupon.getUserId().equals(userId)) {
             throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "用户优惠券归属不匹配");
+        }
+        return userCoupon;
+    }
+
+    private UserCoupon getLockedCoupon(Long userId, Long userCouponId, String orderNo) {
+        UserCoupon userCoupon = getOwnedCoupon(userId, userCouponId);
+        if (userCoupon.getStatus() != UserCouponStatus.LOCKED) {
+            throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "优惠券当前状态不是锁定状态");
+        }
+        if (!orderNo.equals(userCoupon.getOrderNo())) {
+            throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "订单号与锁券记录不匹配");
         }
         return userCoupon;
     }

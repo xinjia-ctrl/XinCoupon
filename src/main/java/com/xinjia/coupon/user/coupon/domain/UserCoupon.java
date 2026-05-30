@@ -51,6 +51,20 @@ public class UserCoupon {
         this.updatedAt = now;
     }
 
+    public void confirmUse() {
+        OffsetDateTime now = OffsetDateTime.now();
+        this.status = UserCouponStatus.USED;
+        this.usedAt = now;
+        this.updatedAt = now;
+    }
+
+    public void release() {
+        this.status = UserCouponStatus.RECEIVED;
+        this.lockedAt = null;
+        this.orderNo = null;
+        this.updatedAt = OffsetDateTime.now();
+    }
+
     public Long getId() {
         return id;
     }

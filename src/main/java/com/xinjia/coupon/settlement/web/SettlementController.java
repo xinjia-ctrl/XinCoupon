@@ -29,4 +29,14 @@ public class SettlementController {
     public ApiResponse<CouponOperationView> lock(@Valid @RequestBody CouponLockRequest request) {
         return ApiResponse.success(settlementService.lock(request));
     }
+
+    @PostMapping("/confirm")
+    public ApiResponse<CouponOperationView> confirm(@Valid @RequestBody CouponConfirmRequest request) {
+        return ApiResponse.success(settlementService.confirm(request));
+    }
+
+    @PostMapping("/cancel")
+    public ApiResponse<CouponOperationView> cancel(@Valid @RequestBody CouponCancelRequest request) {
+        return ApiResponse.success(settlementService.cancel(request));
+    }
 }
