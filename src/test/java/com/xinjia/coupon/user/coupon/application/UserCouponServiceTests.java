@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -187,6 +188,11 @@ class UserCouponServiceTests {
         @Override
         public UserCoupon save(UserCoupon userCoupon) {
             throw new IllegalStateException("保存用户券失败");
+        }
+
+        @Override
+        public Optional<UserCoupon> findById(Long id) {
+            return Optional.empty();
         }
 
         @Override

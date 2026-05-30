@@ -43,6 +43,14 @@ public class UserCoupon {
         this.id = id;
     }
 
+    public void lock(String orderNo) {
+        OffsetDateTime now = OffsetDateTime.now();
+        this.status = UserCouponStatus.LOCKED;
+        this.lockedAt = now;
+        this.orderNo = orderNo;
+        this.updatedAt = now;
+    }
+
     public Long getId() {
         return id;
     }

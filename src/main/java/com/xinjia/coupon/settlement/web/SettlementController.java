@@ -24,4 +24,9 @@ public class SettlementController {
     public ApiResponse<SettlementCalculateView> calculate(@Valid @RequestBody SettlementCalculateRequest request) {
         return ApiResponse.success(settlementService.calculate(request));
     }
+
+    @PostMapping("/lock")
+    public ApiResponse<CouponOperationView> lock(@Valid @RequestBody CouponLockRequest request) {
+        return ApiResponse.success(settlementService.lock(request));
+    }
 }

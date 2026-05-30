@@ -1,5 +1,6 @@
 package com.xinjia.coupon.user.coupon.application;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import com.xinjia.coupon.admin.campaign.domain.CouponCampaign;
 import com.xinjia.coupon.admin.template.application.CouponTemplateService;
 import com.xinjia.coupon.admin.template.domain.CouponTemplate;
 import com.xinjia.coupon.common.enums.ErrorCode;
+import com.xinjia.coupon.common.enums.UserCouponStatus;
 import com.xinjia.coupon.common.exception.BusinessException;
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 import com.xinjia.coupon.user.coupon.infrastructure.CampaignStockCache;
@@ -73,6 +75,27 @@ public class UserCouponService {
 
     public List<UserCoupon> listByUserId(Long userId) {
         return userCouponRepository.findByUserId(userId);
+    }
+
+    public UserCoupon lock(Long userId, Long userCouponId, String orderNo) {
+        UserCoupon userCoupon = getOwnedCoupon(userId, userCouponId);
+        if (userCoupon.getStatus() != UserCouponStatus.RECEIVED) {
+            throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "优惠券当前状态不可锁定");
+        }
+        if (!userCoupon.getExpiredAt().isAfter(OffsetDateTime.now())) {
+            throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "优惠券已过期");
+        }
+        userCoupon.lock(orderNo);
+        return userCouponRepository.save(userCoupon);
+    }
+
+    private UserCoupon getOwnedCoupon(Long userId, Long userCouponId) {
+        UserCoupon userCoupon = userCouponRepository.findById(userCouponId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "用户优惠券不存在"));
+        if (!userCoupon.getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "用户优惠券归属不匹配");
+        }
+        return userCoupon;
     }
 
     private void deductStock(Long campaignId) {

@@ -13,6 +13,8 @@ import com.xinjia.coupon.common.enums.UserCouponStatus;
 import com.xinjia.coupon.settlement.web.SettlementCalculateRequest;
 import com.xinjia.coupon.settlement.web.SettlementCalculateView;
 import com.xinjia.coupon.settlement.web.AvailableCouponView;
+import com.xinjia.coupon.settlement.web.CouponLockRequest;
+import com.xinjia.coupon.settlement.web.CouponOperationView;
 import com.xinjia.coupon.user.coupon.application.UserCouponService;
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 
@@ -41,6 +43,11 @@ public class SettlementService {
                 availableCoupons,
                 bestCoupon
         );
+    }
+
+    public CouponOperationView lock(CouponLockRequest request) {
+        UserCoupon userCoupon = userCouponService.lock(request.userId(), request.userCouponId(), request.orderNo());
+        return CouponOperationView.from(userCoupon);
     }
 
     private List<AvailableCouponView> findAvailableCoupons(SettlementCalculateRequest request) {
