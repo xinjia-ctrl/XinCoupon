@@ -28,6 +28,7 @@ import com.xinjia.coupon.settlement.web.OrderItemRequest;
 import com.xinjia.coupon.settlement.web.SettlementCalculateRequest;
 import com.xinjia.coupon.settlement.web.SettlementCalculateView;
 import com.xinjia.coupon.support.InMemoryCampaignStockCache;
+import com.xinjia.coupon.support.RecordingCouponEventPublisher;
 import com.xinjia.coupon.user.coupon.application.UserCouponService;
 import com.xinjia.coupon.user.coupon.infrastructure.InMemoryReceiveRequestRepository;
 import com.xinjia.coupon.user.coupon.infrastructure.InMemoryUserCouponRepository;
@@ -55,7 +56,8 @@ class SettlementServiceTests {
                 couponCampaignService,
                 couponTemplateService,
                 campaignStockCache,
-                new InMemoryReceiveRequestRepository()
+                new InMemoryReceiveRequestRepository(),
+                new RecordingCouponEventPublisher()
         );
         settlementService = new SettlementService(userCouponService, couponTemplateService);
     }

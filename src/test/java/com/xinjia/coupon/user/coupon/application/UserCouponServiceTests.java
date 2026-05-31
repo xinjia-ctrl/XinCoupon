@@ -23,7 +23,9 @@ import com.xinjia.coupon.common.enums.CampaignStatus;
 import com.xinjia.coupon.common.enums.CouponType;
 import com.xinjia.coupon.common.enums.UserCouponStatus;
 import com.xinjia.coupon.common.exception.BusinessException;
+import com.xinjia.coupon.dispatch.event.domain.CouponReceivedEvent;
 import com.xinjia.coupon.support.InMemoryCampaignStockCache;
+import com.xinjia.coupon.support.RecordingCouponEventPublisher;
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 import com.xinjia.coupon.user.coupon.infrastructure.InMemoryUserCouponRepository;
 import com.xinjia.coupon.user.coupon.infrastructure.InMemoryReceiveRequestRepository;
@@ -35,12 +37,14 @@ class UserCouponServiceTests {
     private CouponTemplateService couponTemplateService;
     private CouponCampaignService couponCampaignService;
     private InMemoryCampaignStockCache campaignStockCache;
+    private RecordingCouponEventPublisher couponEventPublisher;
     private UserCouponService userCouponService;
 
     @BeforeEach
     void setUp() {
         couponTemplateService = new CouponTemplateService(new InMemoryCouponTemplateRepository());
         campaignStockCache = new InMemoryCampaignStockCache();
+        couponEventPublisher = new RecordingCouponEventPublisher();
         couponCampaignService = new CouponCampaignService(
                 new InMemoryCouponCampaignRepository(),
                 couponTemplateService,
@@ -51,7 +55,8 @@ class UserCouponServiceTests {
                 couponCampaignService,
                 couponTemplateService,
                 campaignStockCache,
-                new InMemoryReceiveRequestRepository()
+                new InMemoryReceiveRequestRepository(),
+                couponEventPublisher
         );
     }
 
@@ -126,7 +131,8 @@ class UserCouponServiceTests {
                 couponCampaignService,
                 couponTemplateService,
                 campaignStockCache,
-                new InMemoryReceiveRequestRepository()
+                new InMemoryReceiveRequestRepository(),
+                new RecordingCouponEventPublisher()
         );
 
         assertThatThrownBy(() -> failingService.receive(receiveRequest("req-fail", 10L, campaign.getId())))
@@ -134,6 +140,18 @@ class UserCouponServiceTests {
                 .hasMessage("保存用户券失败");
 
         assertThat(campaignStockCache.getStock(campaign.getId())).isEqualTo(500);
+    }
+
+    @Test
+    void receiveShouldPublishCouponReceivedEvent() {
+        CouponCampaign campaign = createRunningCampaign();
+
+        UserCoupon userCoupon = userCouponService.receive(receiveRequest("req-event", 10L, campaign.getId()));
+
+        assertThat(couponEventPublisher.events()).hasSize(1);
+        assertThat(couponEventPublisher.events().get(0).eventType()).isEqualTo("COUPON_RECEIVED");
+        assertThat(((CouponReceivedEvent) couponEventPublisher.events().get(0)).userCouponId())
+                .isEqualTo(userCoupon.getId());
     }
 
     private ReceiveCouponRequest receiveRequest(String requestId, Long userId, Long campaignId) {

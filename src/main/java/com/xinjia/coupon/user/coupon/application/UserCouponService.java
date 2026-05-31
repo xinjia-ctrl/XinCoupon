@@ -2,6 +2,7 @@ package com.xinjia.coupon.user.coupon.application;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -12,6 +13,8 @@ import com.xinjia.coupon.admin.template.domain.CouponTemplate;
 import com.xinjia.coupon.common.enums.ErrorCode;
 import com.xinjia.coupon.common.enums.UserCouponStatus;
 import com.xinjia.coupon.common.exception.BusinessException;
+import com.xinjia.coupon.dispatch.event.application.CouponEventPublisher;
+import com.xinjia.coupon.dispatch.event.domain.CouponReceivedEvent;
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 import com.xinjia.coupon.user.coupon.infrastructure.CampaignStockCache;
 import com.xinjia.coupon.user.coupon.infrastructure.ReceiveRequestRepository;
@@ -26,19 +29,22 @@ public class UserCouponService {
     private final CouponTemplateService couponTemplateService;
     private final CampaignStockCache campaignStockCache;
     private final ReceiveRequestRepository receiveRequestRepository;
+    private final CouponEventPublisher couponEventPublisher;
 
     public UserCouponService(
             UserCouponRepository userCouponRepository,
             CouponCampaignService couponCampaignService,
             CouponTemplateService couponTemplateService,
             CampaignStockCache campaignStockCache,
-            ReceiveRequestRepository receiveRequestRepository
+            ReceiveRequestRepository receiveRequestRepository,
+            CouponEventPublisher couponEventPublisher
     ) {
         this.userCouponRepository = userCouponRepository;
         this.couponCampaignService = couponCampaignService;
         this.couponTemplateService = couponTemplateService;
         this.campaignStockCache = campaignStockCache;
         this.receiveRequestRepository = receiveRequestRepository;
+        this.couponEventPublisher = couponEventPublisher;
     }
 
     public UserCoupon receive(ReceiveCouponRequest request) {
@@ -70,7 +76,19 @@ public class UserCouponService {
         );
         UserCoupon saved = userCouponRepository.save(userCoupon);
         receiveRequestRepository.saveResult(request.requestId(), saved);
+        publishReceivedEvent(saved);
         return saved;
+    }
+
+    private void publishReceivedEvent(UserCoupon userCoupon) {
+        couponEventPublisher.publish(new CouponReceivedEvent(
+                UUID.randomUUID().toString(),
+                userCoupon.getUserId(),
+                userCoupon.getId(),
+                userCoupon.getTemplateId(),
+                userCoupon.getCampaignId(),
+                OffsetDateTime.now()
+        ));
     }
 
     public List<UserCoupon> listByUserId(Long userId) {
