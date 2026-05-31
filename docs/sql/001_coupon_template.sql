@@ -1,4 +1,4 @@
-create table coupon_template (
+create table if not exists coupon_template (
     id bigint primary key,
     merchant_id bigint not null,
     title varchar(80) not null,
@@ -14,4 +14,6 @@ create table coupon_template (
     updated_at datetime not null,
     index idx_template_merchant_status (merchant_id, status),
     index idx_template_valid_time (valid_start_time, valid_end_time)
-);
+) engine = InnoDB
+  default charset = utf8mb4
+  comment = '优惠券模板表';

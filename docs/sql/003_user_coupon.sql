@@ -1,4 +1,4 @@
-create table user_coupon (
+create table if not exists user_coupon (
     id bigint primary key,
     user_id bigint not null,
     template_id bigint not null,
@@ -15,4 +15,6 @@ create table user_coupon (
     unique key uk_coupon_code (coupon_code),
     index idx_user_coupon_status (user_id, status),
     index idx_user_campaign (user_id, campaign_id)
-);
+) engine = InnoDB
+  default charset = utf8mb4
+  comment = '用户优惠券表';

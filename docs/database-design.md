@@ -44,7 +44,8 @@
 | `template_id` | bigint | 优惠券模板 ID |
 | `merchant_id` | bigint | 商家 ID |
 | `name` | varchar(80) | 活动名称 |
-| `campaign_stock` | int | 活动可发库存 |
+| `total_stock` | int | 活动总库存 |
+| `available_stock` | int | 活动剩余可发库存 |
 | `received_count` | int | 已领取数量 |
 | `per_user_limit` | int | 单用户领取上限 |
 | `start_time` | datetime | 活动开始时间 |
@@ -124,6 +125,25 @@
 - `uk_event_id`：`event_id`
 - `idx_event_type_status`：`event_type`、`consume_status`
 
+### coupon_operation_log
+
+优惠券操作日志表，用于记录管理端状态变更、用户券核销、取消释放等关键操作。
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | bigint | 主键 |
+| `biz_type` | varchar(64) | 业务类型 |
+| `biz_id` | varchar(64) | 业务 ID |
+| `operation_type` | varchar(64) | 操作类型 |
+| `operator_id` | bigint | 操作人 ID |
+| `operation_detail` | varchar(500) | 操作详情 |
+| `created_at` | datetime | 创建时间 |
+
+建议索引：
+
+- `idx_operation_biz`：`biz_type`、`biz_id`
+- `idx_operation_type_time`：`operation_type`、`created_at`
+
 ## 状态流转
 
 ### 优惠券模板
@@ -151,4 +171,4 @@ RECEIVED -> EXPIRED
 
 ## 后续落库计划
 
-第 3 天实现模板管理时，优先创建 `coupon_template` 对应实体和仓储层。第 4 天实现活动管理时，再补充 `coupon_campaign`。用户券、领券记录和事件日志跟随后续业务提交逐步落地。
+第 1 天先完成 MySQL、MyBatis-Plus、核心建表脚本和持久化模型。第 2-4 天再按模板、活动、用户券的顺序逐步替换内存仓储。

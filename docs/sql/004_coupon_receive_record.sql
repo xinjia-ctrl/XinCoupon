@@ -1,4 +1,4 @@
-create table coupon_receive_record (
+create table if not exists coupon_receive_record (
     id bigint primary key,
     request_id varchar(64) not null,
     user_id bigint not null,
@@ -10,4 +10,6 @@ create table coupon_receive_record (
     created_at datetime not null,
     unique key uk_receive_request (request_id),
     index idx_receive_user_campaign (user_id, campaign_id)
-);
+) engine = InnoDB
+  default charset = utf8mb4
+  comment = '领券记录表';
