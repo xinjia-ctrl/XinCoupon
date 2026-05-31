@@ -2,6 +2,10 @@ spring:
   config:
     activate:
       on-profile: dev
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:192.168.100.128}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:xin_coupon}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:}
 
 server:
   port: 8080
