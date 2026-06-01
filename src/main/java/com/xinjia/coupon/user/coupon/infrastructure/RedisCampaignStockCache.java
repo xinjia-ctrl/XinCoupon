@@ -14,12 +14,15 @@ public class RedisCampaignStockCache implements CampaignStockCache {
     private static final String CAMPAIGN_STOCK_KEY = "campaign:stock:";
     private static final DefaultRedisScript<Long> DEDUCT_STOCK_SCRIPT = new DefaultRedisScript<>(
             """
-            local stock = tonumber(redis.call('get', KEYS[1]) or '-1')
+            local rawStock = redis.call('get', KEYS[1])
+            if not rawStock then
+                return -1
+            end
+            local stock = tonumber(rawStock)
             if stock <= 0 then
                 return 0
             end
-            redis.call('decr', KEYS[1])
-            return 1
+            return redis.call('decrby', KEYS[1], 1)
             """,
             Long.class
     );
@@ -50,7 +53,7 @@ public class RedisCampaignStockCache implements CampaignStockCache {
     @Override
     public boolean tryDeductStock(Long campaignId) {
         Long result = stringRedisTemplate.execute(DEDUCT_STOCK_SCRIPT, List.of(buildStockKey(campaignId)));
-        return Long.valueOf(1L).equals(result);
+        return result != null && result >= 0;
     }
 
     @Override
