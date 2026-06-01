@@ -7,11 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.springframework.stereotype.Repository;
-
 import com.xinjia.coupon.admin.campaign.domain.CouponCampaign;
 
-@Repository
 public class InMemoryCouponCampaignRepository implements CouponCampaignRepository {
 
     private final AtomicLong idGenerator = new AtomicLong(2000);
