@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.xinjia.coupon.admin.campaign.domain.CouponCampaign;
 import com.xinjia.coupon.admin.campaign.infrastructure.CouponCampaignRepository;
@@ -38,6 +39,7 @@ public class CouponCampaignService {
         this.campaignStockCache = campaignStockCache;
     }
 
+    @Transactional
     public CouponCampaign create(CreateCouponCampaignRequest request) {
         couponTemplateService.getById(request.templateId());
         validateTimeRange(request);
@@ -56,22 +58,26 @@ public class CouponCampaignService {
         return saved;
     }
 
+    @Transactional(readOnly = true)
     public CouponCampaign getById(Long campaignId) {
         return couponCampaignRepository.findById(campaignId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "发券活动不存在"));
     }
 
+    @Transactional(readOnly = true)
     public List<CouponCampaign> list() {
         return couponCampaignRepository.findAll();
     }
 
+    @Transactional
     public CouponCampaign changeStatus(Long campaignId, UpdateCouponCampaignStatusRequest request) {
         CouponCampaign campaign = getById(campaignId);
         validateStatusChange(campaign, request.status());
-        campaign.changeStatus(request.status());
-        return couponCampaignRepository.save(campaign);
+        return couponCampaignRepository.updateStatus(campaignId, request.status())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "发券活动不存在"));
     }
 
+    @Transactional(readOnly = true)
     public void ensureReceivable(Long campaignId) {
         CouponCampaign campaign = getById(campaignId);
         if (campaign.getStatus() != CampaignStatus.RUNNING) {

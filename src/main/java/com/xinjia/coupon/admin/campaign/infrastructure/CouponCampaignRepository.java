@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.xinjia.coupon.admin.campaign.domain.CouponCampaign;
+import com.xinjia.coupon.common.enums.CampaignStatus;
 
 public interface CouponCampaignRepository {
 
@@ -12,4 +13,6 @@ public interface CouponCampaignRepository {
     Optional<CouponCampaign> findById(Long id);
 
     List<CouponCampaign> findAll();
+
+    Optional<CouponCampaign> updateStatus(Long id, CampaignStatus status);
 }

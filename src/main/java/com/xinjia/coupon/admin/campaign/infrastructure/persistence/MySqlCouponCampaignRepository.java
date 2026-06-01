@@ -1,5 +1,6 @@
 package com.xinjia.coupon.admin.campaign.infrastructure.persistence;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.xinjia.coupon.admin.campaign.domain.CouponCampaign;
 import com.xinjia.coupon.admin.campaign.infrastructure.CouponCampaignRepository;
+import com.xinjia.coupon.common.enums.CampaignStatus;
 
 @Repository
 public class MySqlCouponCampaignRepository implements CouponCampaignRepository {
@@ -50,5 +52,20 @@ public class MySqlCouponCampaignRepository implements CouponCampaignRepository {
                 .stream()
                 .map(couponCampaignConverter::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Optional<CouponCampaign> updateStatus(Long id, CampaignStatus status) {
+        int updatedRows = couponCampaignMapper.update(
+                null,
+                Wrappers.lambdaUpdate(CouponCampaignDO.class)
+                        .set(CouponCampaignDO::getStatus, status.name())
+                        .set(CouponCampaignDO::getUpdatedAt, LocalDateTime.now())
+                        .eq(CouponCampaignDO::getId, id)
+        );
+        if (updatedRows == 0) {
+            return Optional.empty();
+        }
+        return findById(id);
     }
 }

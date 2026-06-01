@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.xinjia.coupon.admin.campaign.domain.CouponCampaign;
+import com.xinjia.coupon.common.enums.CampaignStatus;
 
 public class InMemoryCouponCampaignRepository implements CouponCampaignRepository {
 
@@ -34,5 +35,14 @@ public class InMemoryCouponCampaignRepository implements CouponCampaignRepositor
                 .stream()
                 .sorted(Comparator.comparing(CouponCampaign::getId).reversed())
                 .toList();
+    }
+
+    @Override
+    public Optional<CouponCampaign> updateStatus(Long id, CampaignStatus status) {
+        return findById(id)
+                .map(campaign -> {
+                    campaign.changeStatus(status);
+                    return campaign;
+                });
     }
 }
