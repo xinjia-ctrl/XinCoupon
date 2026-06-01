@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.springframework.stereotype.Repository;
 
+import com.xinjia.coupon.common.enums.UserCouponStatus;
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 import com.xinjia.coupon.user.coupon.infrastructure.UserCouponRepository;
 
@@ -46,6 +47,19 @@ public class MySqlUserCouponRepository implements UserCouponRepository {
         return userCouponMapper.selectList(
                         Wrappers.lambdaQuery(UserCouponDO.class)
                                 .eq(UserCouponDO::getUserId, userId)
+                                .orderByDesc(UserCouponDO::getReceivedAt)
+                )
+                .stream()
+                .map(userCouponConverter::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<UserCoupon> findByUserIdAndStatus(Long userId, UserCouponStatus status) {
+        return userCouponMapper.selectList(
+                        Wrappers.lambdaQuery(UserCouponDO.class)
+                                .eq(UserCouponDO::getUserId, userId)
+                                .eq(UserCouponDO::getStatus, status.name())
                                 .orderByDesc(UserCouponDO::getReceivedAt)
                 )
                 .stream()

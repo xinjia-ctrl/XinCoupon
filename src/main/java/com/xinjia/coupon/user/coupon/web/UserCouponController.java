@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.xinjia.coupon.common.api.ApiResponse;
+import com.xinjia.coupon.common.enums.UserCouponStatus;
 import com.xinjia.coupon.user.coupon.application.UserCouponService;
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 
@@ -32,8 +33,14 @@ public class UserCouponController {
     }
 
     @GetMapping
-    public ApiResponse<List<UserCouponView>> listByUserId(@RequestParam Long userId) {
-        List<UserCouponView> userCoupons = userCouponService.listByUserId(userId)
+    public ApiResponse<List<UserCouponView>> listByUserId(
+            @RequestParam Long userId,
+            @RequestParam(required = false) UserCouponStatus status
+    ) {
+        List<UserCoupon> queriedCoupons = status == null
+                ? userCouponService.listByUserId(userId)
+                : userCouponService.listByUserIdAndStatus(userId, status);
+        List<UserCouponView> userCoupons = queriedCoupons
                 .stream()
                 .map(UserCouponView::from)
                 .toList();

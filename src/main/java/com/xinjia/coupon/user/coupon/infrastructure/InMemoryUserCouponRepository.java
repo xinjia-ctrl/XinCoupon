@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.xinjia.coupon.common.enums.UserCouponStatus;
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 
 public class InMemoryUserCouponRepository implements UserCouponRepository {
@@ -33,6 +34,16 @@ public class InMemoryUserCouponRepository implements UserCouponRepository {
         return userCoupons.values()
                 .stream()
                 .filter(userCoupon -> userCoupon.getUserId().equals(userId))
+                .sorted(Comparator.comparing(UserCoupon::getReceivedAt).reversed())
+                .toList();
+    }
+
+    @Override
+    public List<UserCoupon> findByUserIdAndStatus(Long userId, UserCouponStatus status) {
+        return userCoupons.values()
+                .stream()
+                .filter(userCoupon -> userCoupon.getUserId().equals(userId))
+                .filter(userCoupon -> userCoupon.getStatus() == status)
                 .sorted(Comparator.comparing(UserCoupon::getReceivedAt).reversed())
                 .toList();
     }

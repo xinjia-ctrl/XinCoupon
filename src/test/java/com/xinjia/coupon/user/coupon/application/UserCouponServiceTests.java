@@ -219,6 +219,11 @@ class UserCouponServiceTests {
         }
 
         @Override
+        public List<UserCoupon> findByUserIdAndStatus(Long userId, UserCouponStatus status) {
+            return List.of();
+        }
+
+        @Override
         public long countByUserIdAndCampaignId(Long userId, Long campaignId) {
             return 0;
         }

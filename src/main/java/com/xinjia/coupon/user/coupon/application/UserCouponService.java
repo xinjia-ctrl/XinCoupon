@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.xinjia.coupon.admin.campaign.application.CouponCampaignService;
 import com.xinjia.coupon.admin.campaign.domain.CouponCampaign;
@@ -47,6 +48,7 @@ public class UserCouponService {
         this.couponEventPublisher = couponEventPublisher;
     }
 
+    @Transactional
     public UserCoupon receive(ReceiveCouponRequest request) {
         return receiveRequestRepository.findResult(request.requestId())
                 .orElseGet(() -> doReceive(request));
@@ -91,10 +93,17 @@ public class UserCouponService {
         ));
     }
 
+    @Transactional(readOnly = true)
     public List<UserCoupon> listByUserId(Long userId) {
         return userCouponRepository.findByUserId(userId);
     }
 
+    @Transactional(readOnly = true)
+    public List<UserCoupon> listByUserIdAndStatus(Long userId, UserCouponStatus status) {
+        return userCouponRepository.findByUserIdAndStatus(userId, status);
+    }
+
+    @Transactional
     public UserCoupon lock(Long userId, Long userCouponId, String orderNo) {
         UserCoupon userCoupon = getOwnedCoupon(userId, userCouponId);
         if (userCoupon.getStatus() != UserCouponStatus.RECEIVED) {
@@ -107,12 +116,14 @@ public class UserCouponService {
         return userCouponRepository.save(userCoupon);
     }
 
+    @Transactional
     public UserCoupon confirm(Long userId, Long userCouponId, String orderNo) {
         UserCoupon userCoupon = getLockedCoupon(userId, userCouponId, orderNo);
         userCoupon.confirmUse();
         return userCouponRepository.save(userCoupon);
     }
 
+    @Transactional
     public UserCoupon cancel(Long userId, Long userCouponId, String orderNo) {
         UserCoupon userCoupon = getLockedCoupon(userId, userCouponId, orderNo);
         userCoupon.release();
