@@ -52,6 +52,38 @@ public class CouponTemplate {
         return template;
     }
 
+    public static CouponTemplate restore(
+            Long id,
+            Long merchantId,
+            String title,
+            CouponType couponType,
+            Long discountAmount,
+            Integer discountRate,
+            Long thresholdAmount,
+            OffsetDateTime validStartTime,
+            OffsetDateTime validEndTime,
+            Integer totalStock,
+            CouponTemplateStatus status,
+            OffsetDateTime createdAt,
+            OffsetDateTime updatedAt
+    ) {
+        CouponTemplate template = new CouponTemplate();
+        template.id = id;
+        template.merchantId = merchantId;
+        template.title = title;
+        template.couponType = couponType;
+        template.discountAmount = discountAmount;
+        template.discountRate = discountRate;
+        template.thresholdAmount = thresholdAmount;
+        template.validStartTime = validStartTime;
+        template.validEndTime = validEndTime;
+        template.totalStock = totalStock;
+        template.status = status;
+        template.createdAt = createdAt;
+        template.updatedAt = updatedAt;
+        return template;
+    }
+
     public void assignId(Long id) {
         this.id = id;
     }
