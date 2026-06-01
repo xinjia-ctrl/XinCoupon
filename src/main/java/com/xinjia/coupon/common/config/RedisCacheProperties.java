@@ -7,7 +7,16 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "framework.cache.redis")
 public class RedisCacheProperties {
 
-    private String prefix = "xin-coupon:";
+    private String uniqueName = "xin-coupon";
+    private String prefix = "";
+
+    public String getUniqueName() {
+        return uniqueName;
+    }
+
+    public void setUniqueName(String uniqueName) {
+        this.uniqueName = uniqueName;
+    }
 
     public String getPrefix() {
         return prefix;
@@ -18,6 +27,18 @@ public class RedisCacheProperties {
     }
 
     public String buildKey(String key) {
-        return prefix + key;
+        return normalizedPrefix() + key;
+    }
+
+    private String normalizedPrefix() {
+        String rawPrefix = hasText(prefix) ? prefix : uniqueName;
+        if (!hasText(rawPrefix)) {
+            rawPrefix = "xin-coupon";
+        }
+        return rawPrefix.endsWith(":") ? rawPrefix : rawPrefix + ":";
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

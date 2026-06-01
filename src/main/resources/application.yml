@@ -28,7 +28,8 @@ mybatis-plus:
 framework:
   cache:
     redis:
-      prefix: ${CACHE_REDIS_PREFIX:xin-coupon:}
+      unique-name: ${UNIQUE_NAME:${unique-name:xin-coupon}}
+      prefix: ${CACHE_REDIS_PREFIX:}
 
 server:
   port: 8080
