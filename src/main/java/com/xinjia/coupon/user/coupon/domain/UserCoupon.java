@@ -39,6 +39,38 @@ public class UserCoupon {
         return userCoupon;
     }
 
+    public static UserCoupon restore(
+            Long id,
+            Long userId,
+            Long templateId,
+            Long campaignId,
+            String couponCode,
+            UserCouponStatus status,
+            OffsetDateTime receivedAt,
+            OffsetDateTime lockedAt,
+            OffsetDateTime usedAt,
+            OffsetDateTime expiredAt,
+            String orderNo,
+            OffsetDateTime createdAt,
+            OffsetDateTime updatedAt
+    ) {
+        UserCoupon userCoupon = new UserCoupon();
+        userCoupon.id = id;
+        userCoupon.userId = userId;
+        userCoupon.templateId = templateId;
+        userCoupon.campaignId = campaignId;
+        userCoupon.couponCode = couponCode;
+        userCoupon.status = status;
+        userCoupon.receivedAt = receivedAt;
+        userCoupon.lockedAt = lockedAt;
+        userCoupon.usedAt = usedAt;
+        userCoupon.expiredAt = expiredAt;
+        userCoupon.orderNo = orderNo;
+        userCoupon.createdAt = createdAt;
+        userCoupon.updatedAt = updatedAt;
+        return userCoupon;
+    }
+
     public void assignId(Long id) {
         this.id = id;
     }
