@@ -42,6 +42,12 @@ public class RedisCampaignStockCache implements CampaignStockCache {
     }
 
     @Override
+    public void preheatStock(Long campaignId, Integer stock) {
+        String key = buildStockKey(campaignId);
+        stringRedisTemplate.opsForValue().set(key, String.valueOf(stock));
+    }
+
+    @Override
     public boolean tryDeductStock(Long campaignId) {
         Long result = stringRedisTemplate.execute(DEDUCT_STOCK_SCRIPT, List.of(buildStockKey(campaignId)));
         return Long.valueOf(1L).equals(result);

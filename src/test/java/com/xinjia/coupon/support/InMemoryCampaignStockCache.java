@@ -16,6 +16,11 @@ public class InMemoryCampaignStockCache implements CampaignStockCache {
     }
 
     @Override
+    public void preheatStock(Long campaignId, Integer stock) {
+        stocks.put(campaignId, new AtomicInteger(stock));
+    }
+
+    @Override
     public boolean tryDeductStock(Long campaignId) {
         AtomicInteger stock = stocks.get(campaignId);
         if (stock == null) {

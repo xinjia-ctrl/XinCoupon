@@ -73,8 +73,12 @@ public class CouponCampaignService {
     public CouponCampaign changeStatus(Long campaignId, UpdateCouponCampaignStatusRequest request) {
         CouponCampaign campaign = getById(campaignId);
         validateStatusChange(campaign, request.status());
-        return couponCampaignRepository.updateStatus(campaignId, request.status())
+        CouponCampaign changedCampaign = couponCampaignRepository.updateStatus(campaignId, request.status())
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "发券活动不存在"));
+        if (request.status() == CampaignStatus.RUNNING) {
+            campaignStockCache.preheatStock(changedCampaign.getId(), changedCampaign.getAvailableStock());
+        }
+        return changedCampaign;
     }
 
     @Transactional(readOnly = true)
