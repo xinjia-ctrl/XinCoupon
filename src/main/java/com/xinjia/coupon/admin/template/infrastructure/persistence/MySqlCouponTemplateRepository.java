@@ -1,5 +1,6 @@
 package com.xinjia.coupon.admin.template.infrastructure.persistence;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.xinjia.coupon.admin.template.domain.CouponTemplate;
 import com.xinjia.coupon.admin.template.infrastructure.CouponTemplateRepository;
+import com.xinjia.coupon.common.enums.CouponTemplateStatus;
 
 @Repository
 public class MySqlCouponTemplateRepository implements CouponTemplateRepository {
@@ -50,5 +52,20 @@ public class MySqlCouponTemplateRepository implements CouponTemplateRepository {
                 .stream()
                 .map(couponTemplateConverter::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Optional<CouponTemplate> updateStatus(Long id, CouponTemplateStatus status) {
+        int updatedRows = couponTemplateMapper.update(
+                null,
+                Wrappers.lambdaUpdate(CouponTemplateDO.class)
+                        .set(CouponTemplateDO::getStatus, status.name())
+                        .set(CouponTemplateDO::getUpdatedAt, LocalDateTime.now())
+                        .eq(CouponTemplateDO::getId, id)
+        );
+        if (updatedRows == 0) {
+            return Optional.empty();
+        }
+        return findById(id);
     }
 }

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.xinjia.coupon.admin.template.domain.CouponTemplate;
+import com.xinjia.coupon.common.enums.CouponTemplateStatus;
 
 public interface CouponTemplateRepository {
 
@@ -12,4 +13,6 @@ public interface CouponTemplateRepository {
     Optional<CouponTemplate> findById(Long id);
 
     List<CouponTemplate> findAll();
+
+    Optional<CouponTemplate> updateStatus(Long id, CouponTemplateStatus status);
 }

@@ -3,6 +3,7 @@ package com.xinjia.coupon.admin.template.application;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.xinjia.coupon.admin.template.domain.CouponTemplate;
 import com.xinjia.coupon.admin.template.infrastructure.CouponTemplateRepository;
@@ -21,6 +22,7 @@ public class CouponTemplateService {
         this.couponTemplateRepository = couponTemplateRepository;
     }
 
+    @Transactional
     public CouponTemplate create(CreateCouponTemplateRequest request) {
         validateTimeRange(request);
         validateDiscountRule(request);
@@ -39,19 +41,21 @@ public class CouponTemplateService {
         return couponTemplateRepository.save(template);
     }
 
+    @Transactional(readOnly = true)
     public CouponTemplate getById(Long templateId) {
         return couponTemplateRepository.findById(templateId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "优惠券模板不存在"));
     }
 
+    @Transactional(readOnly = true)
     public List<CouponTemplate> list() {
         return couponTemplateRepository.findAll();
     }
 
+    @Transactional
     public CouponTemplate changeStatus(Long templateId, UpdateCouponTemplateStatusRequest request) {
-        CouponTemplate template = getById(templateId);
-        template.changeStatus(request.status());
-        return couponTemplateRepository.save(template);
+        return couponTemplateRepository.updateStatus(templateId, request.status())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "优惠券模板不存在"));
     }
 
     private void validateTimeRange(CreateCouponTemplateRequest request) {
