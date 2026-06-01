@@ -4,11 +4,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.springframework.stereotype.Repository;
-
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 
-@Repository
 public class InMemoryReceiveRequestRepository implements ReceiveRequestRepository {
 
     private final ConcurrentMap<String, UserCoupon> receivedResults = new ConcurrentHashMap<>();
