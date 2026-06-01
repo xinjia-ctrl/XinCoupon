@@ -10,7 +10,8 @@ public class CouponCampaign {
     private Long templateId;
     private Long merchantId;
     private String name;
-    private Integer campaignStock;
+    private Integer totalStock;
+    private Integer availableStock;
     private Integer receivedCount;
     private Integer perUserLimit;
     private OffsetDateTime startTime;
@@ -36,7 +37,8 @@ public class CouponCampaign {
         campaign.templateId = templateId;
         campaign.merchantId = merchantId;
         campaign.name = name;
-        campaign.campaignStock = campaignStock;
+        campaign.totalStock = campaignStock;
+        campaign.availableStock = campaignStock;
         campaign.receivedCount = 0;
         campaign.perUserLimit = perUserLimit;
         campaign.startTime = startTime;
@@ -44,6 +46,38 @@ public class CouponCampaign {
         campaign.status = CampaignStatus.PENDING;
         campaign.createdAt = now;
         campaign.updatedAt = now;
+        return campaign;
+    }
+
+    public static CouponCampaign restore(
+            Long id,
+            Long templateId,
+            Long merchantId,
+            String name,
+            Integer totalStock,
+            Integer availableStock,
+            Integer receivedCount,
+            Integer perUserLimit,
+            OffsetDateTime startTime,
+            OffsetDateTime endTime,
+            CampaignStatus status,
+            OffsetDateTime createdAt,
+            OffsetDateTime updatedAt
+    ) {
+        CouponCampaign campaign = new CouponCampaign();
+        campaign.id = id;
+        campaign.templateId = templateId;
+        campaign.merchantId = merchantId;
+        campaign.name = name;
+        campaign.totalStock = totalStock;
+        campaign.availableStock = availableStock;
+        campaign.receivedCount = receivedCount;
+        campaign.perUserLimit = perUserLimit;
+        campaign.startTime = startTime;
+        campaign.endTime = endTime;
+        campaign.status = status;
+        campaign.createdAt = createdAt;
+        campaign.updatedAt = updatedAt;
         return campaign;
     }
 
@@ -73,7 +107,15 @@ public class CouponCampaign {
     }
 
     public Integer getCampaignStock() {
-        return campaignStock;
+        return totalStock;
+    }
+
+    public Integer getTotalStock() {
+        return totalStock;
+    }
+
+    public Integer getAvailableStock() {
+        return availableStock;
     }
 
     public Integer getReceivedCount() {
