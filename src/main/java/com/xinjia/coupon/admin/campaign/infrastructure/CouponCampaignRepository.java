@@ -15,4 +15,8 @@ public interface CouponCampaignRepository {
     List<CouponCampaign> findAll();
 
     Optional<CouponCampaign> updateStatus(Long id, CampaignStatus status);
+
+    boolean tryDeductStock(Long id);
+
+    void restoreStock(Long id);
 }

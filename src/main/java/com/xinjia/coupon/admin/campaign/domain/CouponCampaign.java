@@ -90,6 +90,24 @@ public class CouponCampaign {
         this.updatedAt = OffsetDateTime.now();
     }
 
+    public boolean deductStock() {
+        if (availableStock == null || availableStock <= 0) {
+            return false;
+        }
+        availableStock -= 1;
+        receivedCount += 1;
+        updatedAt = OffsetDateTime.now();
+        return true;
+    }
+
+    public void restoreStock() {
+        availableStock += 1;
+        if (receivedCount > 0) {
+            receivedCount -= 1;
+        }
+        updatedAt = OffsetDateTime.now();
+    }
+
     public Long getId() {
         return id;
     }

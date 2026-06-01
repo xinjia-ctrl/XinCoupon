@@ -45,4 +45,16 @@ public class InMemoryCouponCampaignRepository implements CouponCampaignRepositor
                     return campaign;
                 });
     }
+
+    @Override
+    public boolean tryDeductStock(Long id) {
+        return findById(id)
+                .map(CouponCampaign::deductStock)
+                .orElse(false);
+    }
+
+    @Override
+    public void restoreStock(Long id) {
+        findById(id).ifPresent(CouponCampaign::restoreStock);
+    }
 }

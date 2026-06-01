@@ -93,6 +93,18 @@ public class CouponCampaignService {
         }
     }
 
+    @Transactional
+    public void deductDatabaseStock(Long campaignId) {
+        if (!couponCampaignRepository.tryDeductStock(campaignId)) {
+            throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "活动库存不足");
+        }
+    }
+
+    @Transactional
+    public void restoreDatabaseStock(Long campaignId) {
+        couponCampaignRepository.restoreStock(campaignId);
+    }
+
     private void validateTimeRange(CreateCouponCampaignRequest request) {
         if (!request.endTime().isAfter(request.startTime())) {
             throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "活动结束时间必须晚于开始时间");

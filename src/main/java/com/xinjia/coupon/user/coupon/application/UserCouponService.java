@@ -60,9 +60,11 @@ public class UserCouponService {
         validateReceiveLimit(request.userId(), campaign);
         deductStock(campaign.getId());
         try {
+            couponCampaignService.deductDatabaseStock(campaign.getId());
             return createUserCoupon(request, campaign);
         } catch (RuntimeException exception) {
             campaignStockCache.restoreStock(campaign.getId());
+            couponCampaignService.restoreDatabaseStock(campaign.getId());
             throw exception;
         }
     }

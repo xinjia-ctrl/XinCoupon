@@ -68,4 +68,30 @@ public class MySqlCouponCampaignRepository implements CouponCampaignRepository {
         }
         return findById(id);
     }
+
+    @Override
+    public boolean tryDeductStock(Long id) {
+        int updatedRows = couponCampaignMapper.update(
+                null,
+                Wrappers.lambdaUpdate(CouponCampaignDO.class)
+                        .setSql("available_stock = available_stock - 1")
+                        .setSql("received_count = received_count + 1")
+                        .set(CouponCampaignDO::getUpdatedAt, LocalDateTime.now())
+                        .eq(CouponCampaignDO::getId, id)
+                        .gt(CouponCampaignDO::getAvailableStock, 0)
+        );
+        return updatedRows > 0;
+    }
+
+    @Override
+    public void restoreStock(Long id) {
+        couponCampaignMapper.update(
+                null,
+                Wrappers.lambdaUpdate(CouponCampaignDO.class)
+                        .setSql("available_stock = available_stock + 1")
+                        .setSql("received_count = case when received_count > 0 then received_count - 1 else 0 end")
+                        .set(CouponCampaignDO::getUpdatedAt, LocalDateTime.now())
+                        .eq(CouponCampaignDO::getId, id)
+        );
+    }
 }
