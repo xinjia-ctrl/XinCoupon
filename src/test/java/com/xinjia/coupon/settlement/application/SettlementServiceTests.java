@@ -106,6 +106,20 @@ class SettlementServiceTests {
     }
 
     @Test
+    void calculateShouldIgnoreCouponsWithoutDiscountValue() {
+        CouponTemplate discountTemplate = createDiscountTemplate(1L, 100);
+        CouponCampaign discountCampaign = createRunningCampaign(discountTemplate.getId());
+        userCouponService.receive(new ReceiveCouponRequest("settle-req-no-discount", 10L, discountCampaign.getId()));
+
+        SettlementCalculateView result = settlementService.calculate(calculateRequest(10L, 1L, 5000L));
+
+        assertThat(result.availableCoupons()).isEmpty();
+        assertThat(result.bestCoupon()).isNull();
+        assertThat(result.bestDiscountAmount()).isZero();
+        assertThat(result.payableAmount()).isEqualTo(5000L);
+    }
+
+    @Test
     void lockShouldChangeUserCouponToLocked() {
         UserCoupon userCoupon = receiveCoupon("settle-req-5", 10L);
 

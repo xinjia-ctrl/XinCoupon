@@ -85,6 +85,9 @@ public class SettlementService {
             return Optional.empty();
         }
         Long calculatedDiscountAmount = calculateDiscountAmount(request.orderAmount(), template);
+        if (calculatedDiscountAmount <= 0) {
+            return Optional.empty();
+        }
         return Optional.of(new AvailableCouponView(
                 userCoupon.getId(),
                 template.getId(),
