@@ -17,4 +17,10 @@ public interface UserCouponRepository {
     List<UserCoupon> findByUserIdAndStatus(Long userId, UserCouponStatus status);
 
     long countByUserIdAndCampaignId(Long userId, Long campaignId);
+
+    Optional<UserCoupon> lock(Long id, String orderNo);
+
+    Optional<UserCoupon> confirmUse(Long id);
+
+    Optional<UserCoupon> release(Long id);
 }

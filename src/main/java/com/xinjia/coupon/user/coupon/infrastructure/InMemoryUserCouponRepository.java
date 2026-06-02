@@ -56,4 +56,34 @@ public class InMemoryUserCouponRepository implements UserCouponRepository {
                 .filter(userCoupon -> userCoupon.getCampaignId().equals(campaignId))
                 .count();
     }
+
+    @Override
+    public Optional<UserCoupon> lock(Long id, String orderNo) {
+        return findById(id)
+                .filter(userCoupon -> userCoupon.getStatus() == UserCouponStatus.RECEIVED)
+                .map(userCoupon -> {
+                    userCoupon.lock(orderNo);
+                    return userCoupon;
+                });
+    }
+
+    @Override
+    public Optional<UserCoupon> confirmUse(Long id) {
+        return findById(id)
+                .filter(userCoupon -> userCoupon.getStatus() == UserCouponStatus.LOCKED)
+                .map(userCoupon -> {
+                    userCoupon.confirmUse();
+                    return userCoupon;
+                });
+    }
+
+    @Override
+    public Optional<UserCoupon> release(Long id) {
+        return findById(id)
+                .filter(userCoupon -> userCoupon.getStatus() == UserCouponStatus.LOCKED)
+                .map(userCoupon -> {
+                    userCoupon.release();
+                    return userCoupon;
+                });
+    }
 }

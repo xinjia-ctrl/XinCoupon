@@ -114,22 +114,22 @@ public class UserCouponService {
         if (!userCoupon.getExpiredAt().isAfter(OffsetDateTime.now())) {
             throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "优惠券已过期");
         }
-        userCoupon.lock(orderNo);
-        return userCouponRepository.save(userCoupon);
+        return userCouponRepository.lock(userCouponId, orderNo)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BUSINESS_REJECTED, "优惠券当前状态不可锁定"));
     }
 
     @Transactional
     public UserCoupon confirm(Long userId, Long userCouponId, String orderNo) {
         UserCoupon userCoupon = getLockedCoupon(userId, userCouponId, orderNo);
-        userCoupon.confirmUse();
-        return userCouponRepository.save(userCoupon);
+        return userCouponRepository.confirmUse(userCoupon.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.BUSINESS_REJECTED, "优惠券当前状态不是锁定状态"));
     }
 
     @Transactional
     public UserCoupon cancel(Long userId, Long userCouponId, String orderNo) {
         UserCoupon userCoupon = getLockedCoupon(userId, userCouponId, orderNo);
-        userCoupon.release();
-        return userCouponRepository.save(userCoupon);
+        return userCouponRepository.release(userCoupon.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.BUSINESS_REJECTED, "优惠券当前状态不是锁定状态"));
     }
 
     private UserCoupon getOwnedCoupon(Long userId, Long userCouponId) {

@@ -227,5 +227,20 @@ class UserCouponServiceTests {
         public long countByUserIdAndCampaignId(Long userId, Long campaignId) {
             return 0;
         }
+
+        @Override
+        public Optional<UserCoupon> lock(Long id, String orderNo) {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<UserCoupon> confirmUse(Long id) {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<UserCoupon> release(Long id) {
+            return Optional.empty();
+        }
     }
 }

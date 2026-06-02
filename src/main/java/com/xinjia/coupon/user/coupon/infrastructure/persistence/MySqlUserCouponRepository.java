@@ -1,5 +1,6 @@
 package com.xinjia.coupon.user.coupon.infrastructure.persistence;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -74,5 +75,61 @@ public class MySqlUserCouponRepository implements UserCouponRepository {
                         .eq(UserCouponDO::getUserId, userId)
                         .eq(UserCouponDO::getCampaignId, campaignId)
         );
+    }
+
+    @Override
+    public Optional<UserCoupon> lock(Long id, String orderNo) {
+        LocalDateTime now = LocalDateTime.now();
+        int updatedRows = userCouponMapper.update(
+                null,
+                Wrappers.lambdaUpdate(UserCouponDO.class)
+                        .set(UserCouponDO::getStatus, UserCouponStatus.LOCKED.name())
+                        .set(UserCouponDO::getLockedAt, now)
+                        .set(UserCouponDO::getOrderNo, orderNo)
+                        .set(UserCouponDO::getUpdatedAt, now)
+                        .eq(UserCouponDO::getId, id)
+                        .eq(UserCouponDO::getStatus, UserCouponStatus.RECEIVED.name())
+        );
+        if (updatedRows == 0) {
+            return Optional.empty();
+        }
+        return findById(id);
+    }
+
+    @Override
+    public Optional<UserCoupon> confirmUse(Long id) {
+        LocalDateTime now = LocalDateTime.now();
+        int updatedRows = userCouponMapper.update(
+                null,
+                Wrappers.lambdaUpdate(UserCouponDO.class)
+                        .set(UserCouponDO::getStatus, UserCouponStatus.USED.name())
+                        .set(UserCouponDO::getUsedAt, now)
+                        .set(UserCouponDO::getUpdatedAt, now)
+                        .eq(UserCouponDO::getId, id)
+                        .eq(UserCouponDO::getStatus, UserCouponStatus.LOCKED.name())
+        );
+        if (updatedRows == 0) {
+            return Optional.empty();
+        }
+        return findById(id);
+    }
+
+    @Override
+    public Optional<UserCoupon> release(Long id) {
+        LocalDateTime now = LocalDateTime.now();
+        int updatedRows = userCouponMapper.update(
+                null,
+                Wrappers.lambdaUpdate(UserCouponDO.class)
+                        .set(UserCouponDO::getStatus, UserCouponStatus.RECEIVED.name())
+                        .set(UserCouponDO::getLockedAt, null)
+                        .set(UserCouponDO::getOrderNo, null)
+                        .set(UserCouponDO::getUpdatedAt, now)
+                        .eq(UserCouponDO::getId, id)
+                        .eq(UserCouponDO::getStatus, UserCouponStatus.LOCKED.name())
+        );
+        if (updatedRows == 0) {
+            return Optional.empty();
+        }
+        return findById(id);
     }
 }
