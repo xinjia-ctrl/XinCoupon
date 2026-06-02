@@ -49,16 +49,19 @@ public class SettlementService {
         );
     }
 
+    @Transactional
     public CouponOperationView lock(CouponLockRequest request) {
         UserCoupon userCoupon = userCouponService.lock(request.userId(), request.userCouponId(), request.orderNo());
         return CouponOperationView.from(userCoupon);
     }
 
+    @Transactional
     public CouponOperationView confirm(CouponConfirmRequest request) {
         UserCoupon userCoupon = userCouponService.confirm(request.userId(), request.userCouponId(), request.orderNo());
         return CouponOperationView.from(userCoupon);
     }
 
+    @Transactional
     public CouponOperationView cancel(CouponCancelRequest request) {
         UserCoupon userCoupon = userCouponService.cancel(request.userId(), request.userCouponId(), request.orderNo());
         return CouponOperationView.from(userCoupon);
