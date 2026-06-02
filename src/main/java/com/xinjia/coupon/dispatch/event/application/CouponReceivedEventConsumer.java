@@ -20,7 +20,7 @@ public class CouponReceivedEventConsumer {
 
     @EventListener
     public void handle(CouponReceivedEvent event) {
-        if (!consumedEventRepository.markIfAbsent(event.eventId())) {
+        if (!consumedEventRepository.markIfAbsent(event)) {
             log.info("跳过重复领券事件, eventId={}", event.eventId());
             return;
         }
