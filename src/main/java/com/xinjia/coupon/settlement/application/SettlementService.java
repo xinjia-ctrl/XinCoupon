@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.xinjia.coupon.admin.template.application.CouponTemplateService;
 import com.xinjia.coupon.admin.template.domain.CouponTemplate;
@@ -31,6 +32,7 @@ public class SettlementService {
         this.couponTemplateService = couponTemplateService;
     }
 
+    @Transactional(readOnly = true)
     public SettlementCalculateView calculate(SettlementCalculateRequest request) {
         List<AvailableCouponView> availableCoupons = findAvailableCoupons(request);
         AvailableCouponView bestCoupon = selectBestCoupon(availableCoupons).orElse(null);
@@ -63,9 +65,8 @@ public class SettlementService {
     }
 
     private List<AvailableCouponView> findAvailableCoupons(SettlementCalculateRequest request) {
-        return userCouponService.listByUserId(request.userId())
+        return userCouponService.listByUserIdAndStatus(request.userId(), UserCouponStatus.RECEIVED)
                 .stream()
-                .filter(userCoupon -> userCoupon.getStatus() == UserCouponStatus.RECEIVED)
                 .filter(userCoupon -> userCoupon.getExpiredAt().isAfter(OffsetDateTime.now()))
                 .map(userCoupon -> toAvailableCoupon(request, userCoupon))
                 .flatMap(Optional::stream)
