@@ -30,6 +30,10 @@ GET /api/user/coupons
 X-User-Id: 10
 ```
 
+## 幂等与重复提交
+
+管理端创建优惠券模板和创建批量发券任务已接入 `@NoDuplicateSubmit` 防重复提交。当前默认使用本地内存存储实现，后续可以替换为 Redis/Redisson 分布式实现。
+
 ## 枚举说明
 
 - `CouponType`：`FULL_REDUCTION`、`DISCOUNT`、`CASH`

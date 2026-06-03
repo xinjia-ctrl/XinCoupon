@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.xinjia.coupon.admin.template.application.CouponTemplateService;
 import com.xinjia.coupon.admin.template.domain.CouponTemplate;
 import com.xinjia.coupon.common.api.ApiResponse;
+import com.xinjia.coupon.common.idempotent.NoDuplicateSubmit;
 
 import jakarta.validation.Valid;
 
@@ -27,6 +28,7 @@ public class CouponTemplateController {
     }
 
     @PostMapping
+    @NoDuplicateSubmit(key = "'coupon-template:create:' + #request.merchantId() + ':' + #request.title()", ttlSeconds = 5)
     public ApiResponse<CouponTemplateView> create(@Valid @RequestBody CreateCouponTemplateRequest request) {
         CouponTemplate template = couponTemplateService.create(request);
         return ApiResponse.success(CouponTemplateView.from(template));

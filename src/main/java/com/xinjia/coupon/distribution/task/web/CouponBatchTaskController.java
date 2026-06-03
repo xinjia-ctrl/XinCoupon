@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.xinjia.coupon.common.api.ApiResponse;
+import com.xinjia.coupon.common.idempotent.NoDuplicateSubmit;
 import com.xinjia.coupon.distribution.task.application.CouponBatchTaskService;
 import com.xinjia.coupon.distribution.task.domain.CouponBatchTask;
 
@@ -24,6 +25,7 @@ public class CouponBatchTaskController {
     }
 
     @PostMapping
+    @NoDuplicateSubmit(key = "'coupon-batch-task:create:' + #request.batchNo()", ttlSeconds = 10)
     public ApiResponse<CouponBatchTaskView> create(@Valid @RequestBody CreateCouponBatchTaskRequest request) {
         CouponBatchTask task = couponBatchTaskService.create(request);
         couponBatchTaskService.dispatchAsync(task.getId(), request.userIds());
