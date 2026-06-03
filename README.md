@@ -35,6 +35,7 @@ XinCoupon 是一个个人学习性质的优惠券系统 MVP 项目，用于实�
 - 领券事件发布和消费幂等处理
 - 优惠券模板搜索和索引重建
 - 优惠券模板布隆过滤器和重复提交防护
+- 用户券和批量发券任务分片路由预置
 - 请求头身份上下文和可开关鉴权拦截器
 - Nacos 服务注册配置，默认关闭，可通过启动参数开启
 - Knife4j 接口文档入口
@@ -121,6 +122,10 @@ src/main/java/com/xinjia/coupon
 
 核心接口见 [docs/api.md](docs/api.md)，启动后也可以访问 Knife4j 页面 `http://localhost:8080/doc.html`。
 
+## 分片改造
+
+当前已增加用户券和批量发券任务的分片路由、分表脚本和说明文档，默认不启用分库分表，不影响本地启动。详细说明见 [docs/sharding.md](docs/sharding.md)。
+
 ## 运行手册
 
 本地建库、启动参数、鉴权请求头和联调顺序见 [docs/runbook.md](docs/runbook.md)。
@@ -139,6 +144,7 @@ src/main/java/com/xinjia/coupon
 6. 引入本地事件模拟 MQ 消息流转和消费幂等。
 7. 接入 MyBatis-Plus、RocketMQ、Nacos 和 Knife4j 基础能力。
 8. 增加请求头身份上下文和管理端/用户端鉴权开关。
+9. 预置布隆过滤器、重复提交防护和核心表分片路由。
 
 ## 后续计划
 
