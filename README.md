@@ -32,6 +32,7 @@ XinCoupon 是一个个人学习性质的优惠券系统 MVP 项目，用于实�
 - 领券 `requestId` 幂等控制
 - 订单优惠试算、锁券、核销和取消释放
 - 领券事件发布和消费幂等处理
+- 请求头身份上下文和可开关鉴权拦截器
 - Nacos 服务注册配置，默认关闭，可通过启动参数开启
 - Knife4j 接口文档入口
 - 健康检查接口：`GET /api/system/health`
@@ -71,6 +72,15 @@ mvn spring-boot:run `
 mvn spring-boot:run `
   "-Dspring-boot.run.jvmArguments=-Dunique-name=ljx123 -Dframework.cache.redis.prefix=ljx123: -Dspring.data.redis.host=<Redis地址> -Dspring.data.redis.port=<Redis端口> -Dspring.data.redis.password=<Redis密码> -Drocketmq.enabled=true -Drocketmq.name-server=<RocketMQ地址> -Drocketmq.producer.group=xin-coupon-producer -Dspring.cloud.nacos.discovery.enabled=true -Dspring.cloud.nacos.discovery.server-addr=<Nacos地址>"
 ```
+
+如需开启请求头鉴权，可以增加以下 JVM 参数：
+
+```powershell
+mvn spring-boot:run `
+  "-Dspring-boot.run.jvmArguments=-DAUTH_ENABLED=true -DAUTH_ADMIN_TOKEN=<管理端令牌>"
+```
+
+开启后，管理端接口需要携带 `X-Admin-Token`，用户领券和结算接口需要携带 `X-User-Id`。未开启时仍兼容请求体或查询参数里的 `userId`，方便本地调试。
 
 不要把真实密码写入仓库。生产或共享环境建议使用环境变量、启动参数或本地未提交配置管理。
 
@@ -117,6 +127,7 @@ src/main/java/com/xinjia/coupon
 5. 完成订单优惠试算、锁券、核销和释放。
 6. 引入本地事件模拟 MQ 消息流转和消费幂等。
 7. 接入 MyBatis-Plus、RocketMQ、Nacos 和 Knife4j 基础能力。
+8. 增加请求头身份上下文和管理端/用户端鉴权开关。
 
 ## 后续计划
 
@@ -133,7 +144,7 @@ mvn spring-boot:run
 
 ## 测试说明
 
-当前测试覆盖模板、活动、领券、Redis 库存扣减、结算、锁券、核销、释放和事件消费幂等。
+当前测试覆盖模板、活动、领券、Redis 库存扣减、结算、锁券、核销、释放、事件消费幂等和请求头鉴权拦截器。
 
 ```powershell
 mvn test

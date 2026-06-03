@@ -13,6 +13,23 @@
 }
 ```
 
+## 鉴权说明
+
+默认 `AUTH_ENABLED=false`，接口可以继续通过请求体或查询参数传递 `userId`，便于本地联调。
+
+开启 `AUTH_ENABLED=true` 后：
+
+- 管理端接口 `/api/admin/**` 需要请求头 `X-Admin-Token`。
+- 用户券接口 `/api/user/**` 和结算接口 `/api/settlement/**` 需要请求头 `X-User-Id`。
+- `GET /api/system/health` 不需要鉴权。
+
+示例：
+
+```http
+GET /api/user/coupons
+X-User-Id: 10
+```
+
 ## 枚举说明
 
 - `CouponType`：`FULL_REDUCTION`、`DISCOUNT`、`CASH`
@@ -121,7 +138,6 @@ POST /api/user/coupons/receive
 ```json
 {
   "requestId": "receive-20260531-0001",
-  "userId": 10,
   "campaignId": 2001
 }
 ```
@@ -129,7 +145,7 @@ POST /api/user/coupons/receive
 ### 查询用户券
 
 ```http
-GET /api/user/coupons?userId=10
+GET /api/user/coupons
 ```
 
 ## 订单结算
@@ -142,7 +158,6 @@ POST /api/settlement/calculate
 
 ```json
 {
-  "userId": 10,
   "orderNo": "ORDER-20260531-0001",
   "merchantId": 1,
   "orderAmount": 5000,
@@ -165,7 +180,6 @@ POST /api/settlement/lock
 
 ```json
 {
-  "userId": 10,
   "userCouponId": 3001,
   "orderNo": "ORDER-20260531-0001"
 }
@@ -179,7 +193,6 @@ POST /api/settlement/confirm
 
 ```json
 {
-  "userId": 10,
   "userCouponId": 3001,
   "orderNo": "ORDER-20260531-0001"
 }
@@ -193,7 +206,6 @@ POST /api/settlement/cancel
 
 ```json
 {
-  "userId": 10,
   "userCouponId": 3001,
   "orderNo": "ORDER-20260531-0001"
 }
