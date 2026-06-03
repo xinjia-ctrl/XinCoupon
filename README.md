@@ -122,6 +122,10 @@ src/main/java/com/xinjia/coupon
 
 本地建库、启动参数、鉴权请求头和联调顺序见 [docs/runbook.md](docs/runbook.md)。
 
+## 网关工程
+
+`gateway` 目录提供独立 Spring Cloud Gateway 工程，默认监听 `8088` 并转发到主应用 `8080`。启动说明见 [gateway/README.md](gateway/README.md)。
+
 ## 已完成路线
 
 1. 完成优惠券模板管理。

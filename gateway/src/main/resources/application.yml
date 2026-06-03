@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: xin-coupon-gateway
+  cloud:
+    nacos:
+      discovery:
+        enabled: ${NACOS_DISCOVERY_ENABLED:false}
+        server-addr: ${NACOS_SERVER_ADDR:}
+        namespace: ${NACOS_NAMESPACE:}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+    gateway:
+      routes:
+        - id: xin-coupon-admin
+          uri: ${XIN_COUPON_SERVICE_URI:http://localhost:8080}
+          predicates:
+            - Path=/api/admin/**
+        - id: xin-coupon-user
+          uri: ${XIN_COUPON_SERVICE_URI:http://localhost:8080}
+          predicates:
+            - Path=/api/user/**
+        - id: xin-coupon-settlement
+          uri: ${XIN_COUPON_SERVICE_URI:http://localhost:8080}
+          predicates:
+            - Path=/api/settlement/**
+        - id: xin-coupon-search
+          uri: ${XIN_COUPON_SERVICE_URI:http://localhost:8080}
+          predicates:
+            - Path=/api/search/**
+        - id: xin-coupon-system
+          uri: ${XIN_COUPON_SERVICE_URI:http://localhost:8080}
+          predicates:
+            - Path=/api/system/**
+
+server:
+  port: ${GATEWAY_PORT:8088}
+
+logging:
+  level:
+    com.xinjia.coupon.gateway: info
