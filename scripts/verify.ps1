@@ -11,7 +11,7 @@ try {
     Write-Host "[2/3] Scan high-risk secrets"
     $scanTargets = @("README.md", "docs", "src/main/resources")
     $patterns = @(
-        "Sm9s[A-Za-z0-9+/=]+",
+        "spring\.data\.redis\.password=[^<\s][^\s]+",
         "redis\.password=[A-Za-z0-9+/=]{20,}",
         "MYSQL_PASSWORD=[^<\s][^\s]+",
         "AUTH_ADMIN_TOKEN=[^<\s][^\s]+"
