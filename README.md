@@ -118,6 +118,10 @@ src/main/java/com/xinjia/coupon
 
 核心接口见 [docs/api.md](docs/api.md)，启动后也可以访问 Knife4j 页面 `http://localhost:8080/doc.html`。
 
+## 运行手册
+
+本地建库、启动参数、鉴权请求头和联调顺序见 [docs/runbook.md](docs/runbook.md)。
+
 ## 已完成路线
 
 1. 完成优惠券模板管理。
@@ -140,6 +144,7 @@ src/main/java/com/xinjia/coupon
 ```powershell
 mvn test
 mvn spring-boot:run
+powershell -ExecutionPolicy Bypass -File scripts\verify.ps1
 ```
 
 ## 测试说明
@@ -148,4 +153,10 @@ mvn spring-boot:run
 
 ```powershell
 mvn test
+```
+
+发布前建议执行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\verify.ps1
 ```
