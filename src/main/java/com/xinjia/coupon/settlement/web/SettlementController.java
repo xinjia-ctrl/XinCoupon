@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.xinjia.coupon.common.api.ApiResponse;
+import com.xinjia.coupon.common.auth.RequestIdentityResolver;
 import com.xinjia.coupon.settlement.application.SettlementService;
 
 import jakarta.validation.Valid;
@@ -22,21 +23,25 @@ public class SettlementController {
 
     @PostMapping("/calculate")
     public ApiResponse<SettlementCalculateView> calculate(@Valid @RequestBody SettlementCalculateRequest request) {
-        return ApiResponse.success(settlementService.calculate(request));
+        Long userId = RequestIdentityResolver.resolveUserId(request.userId());
+        return ApiResponse.success(settlementService.calculate(request.withUserId(userId)));
     }
 
     @PostMapping("/lock")
     public ApiResponse<CouponOperationView> lock(@Valid @RequestBody CouponLockRequest request) {
-        return ApiResponse.success(settlementService.lock(request));
+        Long userId = RequestIdentityResolver.resolveUserId(request.userId());
+        return ApiResponse.success(settlementService.lock(request.withUserId(userId)));
     }
 
     @PostMapping("/confirm")
     public ApiResponse<CouponOperationView> confirm(@Valid @RequestBody CouponConfirmRequest request) {
-        return ApiResponse.success(settlementService.confirm(request));
+        Long userId = RequestIdentityResolver.resolveUserId(request.userId());
+        return ApiResponse.success(settlementService.confirm(request.withUserId(userId)));
     }
 
     @PostMapping("/cancel")
     public ApiResponse<CouponOperationView> cancel(@Valid @RequestBody CouponCancelRequest request) {
-        return ApiResponse.success(settlementService.cancel(request));
+        Long userId = RequestIdentityResolver.resolveUserId(request.userId());
+        return ApiResponse.success(settlementService.cancel(request.withUserId(userId)));
     }
 }

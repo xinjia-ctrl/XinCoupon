@@ -11,10 +11,14 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 public record SettlementCalculateRequest(
-        @NotNull @Positive Long userId,
+        @Positive Long userId,
         @NotBlank @Size(max = 64) String orderNo,
         @NotNull @Positive Long merchantId,
         @NotNull @PositiveOrZero Long orderAmount,
         @Valid @NotEmpty List<OrderItemRequest> items
 ) {
+
+    public SettlementCalculateRequest withUserId(Long resolvedUserId) {
+        return new SettlementCalculateRequest(resolvedUserId, orderNo, merchantId, orderAmount, items);
+    }
 }
