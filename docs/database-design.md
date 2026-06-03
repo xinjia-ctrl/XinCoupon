@@ -144,6 +144,28 @@
 - `idx_operation_biz`：`biz_type`、`biz_id`
 - `idx_operation_type_time`：`operation_type`、`created_at`
 
+### coupon_batch_task
+
+批量发券任务表，用于记录从用户清单导入后异步发券的执行进度。
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | bigint | 主键 |
+| `batch_no` | varchar(64) | 批次号 |
+| `campaign_id` | bigint | 发券活动 ID |
+| `total_count` | int | 用户总数 |
+| `success_count` | int | 成功发券数 |
+| `failure_count` | int | 失败发券数 |
+| `status` | varchar(32) | 任务状态 |
+| `created_at` | datetime | 创建时间 |
+| `updated_at` | datetime | 更新时间 |
+
+建议索引：
+
+- `uk_batch_no`：`batch_no`
+- `idx_batch_campaign`：`campaign_id`
+- `idx_batch_status_time`：`status`、`created_at`
+
 ## 状态流转
 
 ### 优惠券模板

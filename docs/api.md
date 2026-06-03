@@ -125,6 +125,30 @@ PATCH /api/admin/coupon-campaigns/{campaignId}/status
 }
 ```
 
+## 批量发券任务
+
+### 创建批量发券任务
+
+```http
+POST /api/admin/coupon-batch-tasks
+```
+
+当前请求体直接传入用户 ID 列表，用于模拟 Excel 导入后的用户清单；服务会异步执行发券。
+
+```json
+{
+  "batchNo": "batch-20260603-0001",
+  "campaignId": 2001,
+  "userIds": [10, 11, 12]
+}
+```
+
+### 查询批量发券任务
+
+```http
+GET /api/admin/coupon-batch-tasks/{taskId}
+```
+
 ## 用户优惠券
 
 ### 用户领券
