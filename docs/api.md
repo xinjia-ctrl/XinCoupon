@@ -211,6 +211,24 @@ POST /api/settlement/cancel
 }
 ```
 
+## 搜索接口
+
+### 搜索优惠券模板
+
+```http
+GET /api/search/coupon-templates?keyword=新人&merchantId=1&status=ENABLED
+```
+
+`keyword`、`merchantId`、`status` 都是可选参数。当前实现使用内存索引模拟 Elasticsearch 文档，模板创建和状态变更后会通过应用事件同步索引。
+
+### 重建搜索索引
+
+```http
+POST /api/search/coupon-templates/rebuild
+```
+
+用于模拟从数据库或 Binlog 重新构建搜索索引。
+
 ## 事件说明
 
 用户领券成功后会发布 `COUPON_RECEIVED` 事件。当前实现使用 Spring 本地事件模拟消息流转，并提供 `eventId` 消费幂等处理；后续可替换为 RocketMQ 生产者和消费者。

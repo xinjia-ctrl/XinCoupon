@@ -2,6 +2,7 @@ package com.xinjia.coupon.admin.template.application;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,9 +18,19 @@ import com.xinjia.coupon.common.exception.BusinessException;
 public class CouponTemplateService {
 
     private final CouponTemplateRepository couponTemplateRepository;
+    private final CouponTemplateChangePublisher couponTemplateChangePublisher;
 
     public CouponTemplateService(CouponTemplateRepository couponTemplateRepository) {
+        this(couponTemplateRepository, CouponTemplateChangePublisher.noop());
+    }
+
+    @Autowired
+    public CouponTemplateService(
+            CouponTemplateRepository couponTemplateRepository,
+            CouponTemplateChangePublisher couponTemplateChangePublisher
+    ) {
         this.couponTemplateRepository = couponTemplateRepository;
+        this.couponTemplateChangePublisher = couponTemplateChangePublisher;
     }
 
     @Transactional
@@ -38,7 +49,9 @@ public class CouponTemplateService {
                 request.validEndTime(),
                 request.totalStock()
         );
-        return couponTemplateRepository.save(template);
+        CouponTemplate saved = couponTemplateRepository.save(template);
+        couponTemplateChangePublisher.publish(saved);
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -54,8 +67,10 @@ public class CouponTemplateService {
 
     @Transactional
     public CouponTemplate changeStatus(Long templateId, UpdateCouponTemplateStatusRequest request) {
-        return couponTemplateRepository.updateStatus(templateId, request.status())
+        CouponTemplate changed = couponTemplateRepository.updateStatus(templateId, request.status())
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "优惠券模板不存在"));
+        couponTemplateChangePublisher.publish(changed);
+        return changed;
     }
 
     private void validateTimeRange(CreateCouponTemplateRequest request) {
