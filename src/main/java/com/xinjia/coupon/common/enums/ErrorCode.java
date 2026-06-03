@@ -2,6 +2,8 @@ package com.xinjia.coupon.common.enums;
 
 public enum ErrorCode {
     PARAMETER_INVALID(40001, "请求参数不合法"),
+    UNAUTHORIZED(40101, "未登录或登录已失效"),
+    FORBIDDEN(40301, "无访问权限"),
     RESOURCE_NOT_FOUND(40401, "资源不存在"),
     BUSINESS_REJECTED(40901, "业务规则校验失败"),
     SYSTEM_ERROR(50000, "系统繁忙，请稍后重试");

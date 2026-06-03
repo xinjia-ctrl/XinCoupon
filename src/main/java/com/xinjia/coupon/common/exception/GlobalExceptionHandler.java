@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.xinjia.coupon.common.api.ApiResponse;
+import com.xinjia.coupon.common.auth.ForbiddenException;
+import com.xinjia.coupon.common.auth.UnauthorizedException;
 import com.xinjia.coupon.common.enums.ErrorCode;
 
 @RestControllerAdvice
@@ -19,6 +21,18 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiResponse<Void> handleBusinessException(BusinessException exception) {
         return ApiResponse.failure(exception.getErrorCode().getCode(), exception.getMessage());
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ApiResponse<Void> handleUnauthorizedException(UnauthorizedException exception) {
+        return ApiResponse.failure(ErrorCode.UNAUTHORIZED.getCode(), exception.getMessage());
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiResponse<Void> handleForbiddenException(ForbiddenException exception) {
+        return ApiResponse.failure(ErrorCode.FORBIDDEN.getCode(), exception.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
