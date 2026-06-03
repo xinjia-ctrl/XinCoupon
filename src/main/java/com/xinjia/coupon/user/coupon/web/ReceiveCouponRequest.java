@@ -7,7 +7,11 @@ import jakarta.validation.constraints.Size;
 
 public record ReceiveCouponRequest(
         @NotBlank @Size(max = 64) String requestId,
-        @NotNull @Positive Long userId,
+        @Positive Long userId,
         @NotNull @Positive Long campaignId
 ) {
+
+    public ReceiveCouponRequest withUserId(Long resolvedUserId) {
+        return new ReceiveCouponRequest(requestId, resolvedUserId, campaignId);
+    }
 }
