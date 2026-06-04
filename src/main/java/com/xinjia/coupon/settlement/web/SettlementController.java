@@ -44,4 +44,10 @@ public class SettlementController {
         Long userId = RequestIdentityResolver.resolveUserId(request.userId());
         return ApiResponse.success(settlementService.cancel(request.withUserId(userId)));
     }
+
+    @PostMapping("/refund")
+    public ApiResponse<CouponOperationView> refund(@Valid @RequestBody CouponRefundRequest request) {
+        Long userId = RequestIdentityResolver.resolveUserId(request.userId());
+        return ApiResponse.success(settlementService.refund(request.withUserId(userId)));
+    }
 }

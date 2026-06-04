@@ -132,4 +132,24 @@ public class MySqlUserCouponRepository implements UserCouponRepository {
         }
         return findById(id);
     }
+
+    @Override
+    public Optional<UserCoupon> refund(Long id) {
+        LocalDateTime now = LocalDateTime.now();
+        int updatedRows = userCouponMapper.update(
+                null,
+                Wrappers.lambdaUpdate(UserCouponDO.class)
+                        .set(UserCouponDO::getStatus, UserCouponStatus.RECEIVED.name())
+                        .set(UserCouponDO::getLockedAt, null)
+                        .set(UserCouponDO::getUsedAt, null)
+                        .set(UserCouponDO::getOrderNo, null)
+                        .set(UserCouponDO::getUpdatedAt, now)
+                        .eq(UserCouponDO::getId, id)
+                        .eq(UserCouponDO::getStatus, UserCouponStatus.USED.name())
+        );
+        if (updatedRows == 0) {
+            return Optional.empty();
+        }
+        return findById(id);
+    }
 }

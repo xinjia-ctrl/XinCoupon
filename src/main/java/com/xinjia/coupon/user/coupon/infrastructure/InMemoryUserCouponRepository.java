@@ -86,4 +86,14 @@ public class InMemoryUserCouponRepository implements UserCouponRepository {
                     return userCoupon;
                 });
     }
+
+    @Override
+    public Optional<UserCoupon> refund(Long id) {
+        return findById(id)
+                .filter(userCoupon -> userCoupon.getStatus() == UserCouponStatus.USED)
+                .map(userCoupon -> {
+                    userCoupon.refund();
+                    return userCoupon;
+                });
+    }
 }

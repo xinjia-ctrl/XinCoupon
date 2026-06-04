@@ -57,4 +57,20 @@ public class CouponTemplateController {
         CouponTemplate template = couponTemplateService.changeStatus(templateId, request);
         return ApiResponse.success(CouponTemplateView.from(template));
     }
+
+    @PostMapping("/{templateId}/stock/increase")
+    @NoDuplicateSubmit(key = "'coupon-template:increase-stock:' + #templateId + ':' + #request.increasedStock()", ttlSeconds = 5)
+    public ApiResponse<CouponTemplateView> increaseStock(
+            @PathVariable Long templateId,
+            @Valid @RequestBody IncreaseCouponTemplateStockRequest request
+    ) {
+        CouponTemplate template = couponTemplateService.increaseStock(templateId, request);
+        return ApiResponse.success(CouponTemplateView.from(template));
+    }
+
+    @PostMapping("/{templateId}/terminate")
+    public ApiResponse<CouponTemplateView> terminate(@PathVariable Long templateId) {
+        CouponTemplate template = couponTemplateService.terminate(templateId);
+        return ApiResponse.success(CouponTemplateView.from(template));
+    }
 }

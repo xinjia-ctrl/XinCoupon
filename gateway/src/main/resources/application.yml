@@ -26,6 +26,10 @@ spring:
           uri: ${XIN_COUPON_SERVICE_URI:http://localhost:8080}
           predicates:
             - Path=/api/search/**
+        - id: xin-coupon-engine
+          uri: ${XIN_COUPON_SERVICE_URI:http://localhost:8080}
+          predicates:
+            - Path=/api/engine/**
         - id: xin-coupon-system
           uri: ${XIN_COUPON_SERVICE_URI:http://localhost:8080}
           predicates:

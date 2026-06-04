@@ -132,6 +132,19 @@ public class UserCouponService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.BUSINESS_REJECTED, "优惠券当前状态不是锁定状态"));
     }
 
+    @Transactional
+    public UserCoupon refund(Long userId, Long userCouponId, String orderNo) {
+        UserCoupon userCoupon = getOwnedCoupon(userId, userCouponId);
+        if (userCoupon.getStatus() != UserCouponStatus.USED) {
+            throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "优惠券当前状态不可退款返还");
+        }
+        if (!orderNo.equals(userCoupon.getOrderNo())) {
+            throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "订单号与核销记录不匹配");
+        }
+        return userCouponRepository.refund(userCoupon.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.BUSINESS_REJECTED, "优惠券当前状态不可退款返还"));
+    }
+
     private UserCoupon getOwnedCoupon(Long userId, Long userCouponId) {
         UserCoupon userCoupon = userCouponRepository.findById(userCouponId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "用户优惠券不存在"));

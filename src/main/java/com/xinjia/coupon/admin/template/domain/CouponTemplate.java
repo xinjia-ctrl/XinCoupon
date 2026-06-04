@@ -93,6 +93,11 @@ public class CouponTemplate {
         this.updatedAt = OffsetDateTime.now();
     }
 
+    public void increaseStock(Integer increasedStock) {
+        this.totalStock += increasedStock;
+        this.updatedAt = OffsetDateTime.now();
+    }
+
     public Long getId() {
         return id;
     }

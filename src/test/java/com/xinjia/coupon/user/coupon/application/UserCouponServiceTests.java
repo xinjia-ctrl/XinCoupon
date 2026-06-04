@@ -242,5 +242,10 @@ class UserCouponServiceTests {
         public Optional<UserCoupon> release(Long id) {
             return Optional.empty();
         }
+
+        @Override
+        public Optional<UserCoupon> refund(Long id) {
+            return Optional.empty();
+        }
     }
 }

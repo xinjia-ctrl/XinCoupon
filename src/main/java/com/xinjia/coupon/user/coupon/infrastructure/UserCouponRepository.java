@@ -23,4 +23,6 @@ public interface UserCouponRepository {
     Optional<UserCoupon> confirmUse(Long id);
 
     Optional<UserCoupon> release(Long id);
+
+    Optional<UserCoupon> refund(Long id);
 }

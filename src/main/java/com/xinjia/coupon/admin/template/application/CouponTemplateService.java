@@ -10,7 +10,9 @@ import com.xinjia.coupon.admin.template.domain.CouponTemplate;
 import com.xinjia.coupon.admin.template.infrastructure.CouponTemplateBloomFilter;
 import com.xinjia.coupon.admin.template.infrastructure.CouponTemplateRepository;
 import com.xinjia.coupon.admin.template.web.CreateCouponTemplateRequest;
+import com.xinjia.coupon.admin.template.web.IncreaseCouponTemplateStockRequest;
 import com.xinjia.coupon.admin.template.web.UpdateCouponTemplateStatusRequest;
+import com.xinjia.coupon.common.enums.CouponTemplateStatus;
 import com.xinjia.coupon.common.enums.CouponType;
 import com.xinjia.coupon.common.enums.ErrorCode;
 import com.xinjia.coupon.common.exception.BusinessException;
@@ -88,6 +90,30 @@ public class CouponTemplateService {
     @Transactional
     public CouponTemplate changeStatus(Long templateId, UpdateCouponTemplateStatusRequest request) {
         CouponTemplate changed = couponTemplateRepository.updateStatus(templateId, request.status())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "优惠券模板不存在"));
+        couponTemplateChangePublisher.publish(changed);
+        return changed;
+    }
+
+    @Transactional
+    public CouponTemplate increaseStock(Long templateId, IncreaseCouponTemplateStockRequest request) {
+        CouponTemplate template = getById(templateId);
+        if (template.getStatus() == CouponTemplateStatus.DISABLED || template.getStatus() == CouponTemplateStatus.EXPIRED) {
+            throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "已停用或过期的优惠券模板不可增加发行量");
+        }
+        CouponTemplate changed = couponTemplateRepository.increaseStock(templateId, request.increasedStock())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "优惠券模板不存在"));
+        couponTemplateChangePublisher.publish(changed);
+        return changed;
+    }
+
+    @Transactional
+    public CouponTemplate terminate(Long templateId) {
+        CouponTemplate template = getById(templateId);
+        if (template.getStatus() == CouponTemplateStatus.DISABLED) {
+            return template;
+        }
+        CouponTemplate changed = couponTemplateRepository.updateStatus(templateId, CouponTemplateStatus.DISABLED)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "优惠券模板不存在"));
         couponTemplateChangePublisher.publish(changed);
         return changed;

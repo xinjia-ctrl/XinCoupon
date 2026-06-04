@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import com.xinjia.coupon.admin.template.domain.CouponTemplate;
 import com.xinjia.coupon.admin.template.infrastructure.InMemoryCouponTemplateRepository;
 import com.xinjia.coupon.admin.template.web.CreateCouponTemplateRequest;
+import com.xinjia.coupon.admin.template.web.IncreaseCouponTemplateStockRequest;
 import com.xinjia.coupon.admin.template.web.UpdateCouponTemplateStatusRequest;
 import com.xinjia.coupon.common.enums.CouponTemplateStatus;
 import com.xinjia.coupon.common.enums.CouponType;
@@ -80,6 +81,27 @@ class CouponTemplateServiceTests {
         );
 
         assertThat(template.getStatus()).isEqualTo(CouponTemplateStatus.ENABLED);
+    }
+
+    @Test
+    void increaseStockShouldAddTemplateStock() {
+        CouponTemplate saved = couponTemplateService.create(validFullReductionRequest());
+
+        CouponTemplate template = couponTemplateService.increaseStock(
+                saved.getId(),
+                new IncreaseCouponTemplateStockRequest(200)
+        );
+
+        assertThat(template.getTotalStock()).isEqualTo(1200);
+    }
+
+    @Test
+    void terminateShouldDisableTemplate() {
+        CouponTemplate saved = couponTemplateService.create(validFullReductionRequest());
+
+        CouponTemplate template = couponTemplateService.terminate(saved.getId());
+
+        assertThat(template.getStatus()).isEqualTo(CouponTemplateStatus.DISABLED);
     }
 
     @Test

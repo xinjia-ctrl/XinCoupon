@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import com.xinjia.coupon.common.enums.CouponBatchTaskStatus;
 import com.xinjia.coupon.common.exception.BusinessException;
 import com.xinjia.coupon.distribution.task.domain.CouponBatchTask;
+import com.xinjia.coupon.distribution.task.infrastructure.InMemoryCouponBatchTaskFailureRepository;
 import com.xinjia.coupon.distribution.task.infrastructure.InMemoryCouponBatchTaskRepository;
 import com.xinjia.coupon.distribution.task.web.CreateCouponBatchTaskRequest;
 import com.xinjia.coupon.user.coupon.application.UserCouponService;
@@ -28,6 +29,7 @@ class CouponBatchTaskServiceTests {
         userCouponService = mock(UserCouponService.class);
         couponBatchTaskService = new CouponBatchTaskService(
                 new InMemoryCouponBatchTaskRepository(),
+                new InMemoryCouponBatchTaskFailureRepository(),
                 userCouponService
         );
     }
@@ -55,6 +57,7 @@ class CouponBatchTaskServiceTests {
         assertThat(executed.getStatus()).isEqualTo(CouponBatchTaskStatus.FAILED);
         assertThat(executed.getSuccessCount()).isZero();
         assertThat(executed.getFailureCount()).isEqualTo(1);
+        assertThat(couponBatchTaskService.listFailures(task.getId())).hasSize(1);
     }
 
     @Test

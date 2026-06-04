@@ -90,6 +90,24 @@ PATCH /api/admin/coupon-templates/{templateId}/status
 }
 ```
 
+### 增加模板发行量
+
+```http
+POST /api/admin/coupon-templates/{templateId}/stock/increase
+```
+
+```json
+{
+  "increasedStock": 100
+}
+```
+
+### 终止模板
+
+```http
+POST /api/admin/coupon-templates/{templateId}/terminate
+```
+
 ## 发券活动
 
 ### 创建活动
@@ -151,6 +169,54 @@ POST /api/admin/coupon-batch-tasks
 
 ```http
 GET /api/admin/coupon-batch-tasks/{taskId}
+```
+
+### 分页查询批量发券任务
+
+```http
+GET /api/admin/coupon-batch-tasks?pageNo=1&pageSize=10&status=PARTIAL_FAILED
+```
+
+### 查询批量发券失败明细
+
+```http
+GET /api/admin/coupon-batch-tasks/{taskId}/failures
+```
+
+## 优惠券预约提醒
+
+### 创建预约提醒
+
+```http
+POST /api/engine/coupon-template-reminds
+```
+
+```json
+{
+  "userId": 10,
+  "templateId": 1001,
+  "remindType": "APP",
+  "remindAt": "2026-06-05T09:50:00+08:00"
+}
+```
+
+### 查询预约提醒
+
+```http
+GET /api/engine/coupon-template-reminds?userId=10&status=ACTIVE
+```
+
+### 取消预约提醒
+
+```http
+POST /api/engine/coupon-template-reminds/cancel
+```
+
+```json
+{
+  "userId": 10,
+  "remindId": 9001
+}
 ```
 
 ## 用户优惠券
@@ -217,6 +283,19 @@ POST /api/settlement/lock
 
 ```http
 POST /api/settlement/confirm
+```
+
+```json
+{
+  "userCouponId": 3001,
+  "orderNo": "ORDER-20260531-0001"
+}
+```
+
+### 退款返还优惠券
+
+```http
+POST /api/settlement/refund
 ```
 
 ```json

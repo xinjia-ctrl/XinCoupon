@@ -97,6 +97,14 @@ public class UserCoupon {
         this.updatedAt = OffsetDateTime.now();
     }
 
+    public void refund() {
+        this.status = UserCouponStatus.RECEIVED;
+        this.lockedAt = null;
+        this.usedAt = null;
+        this.orderNo = null;
+        this.updatedAt = OffsetDateTime.now();
+    }
+
     public Long getId() {
         return id;
     }

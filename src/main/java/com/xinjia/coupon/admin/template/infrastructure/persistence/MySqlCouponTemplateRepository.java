@@ -68,4 +68,19 @@ public class MySqlCouponTemplateRepository implements CouponTemplateRepository {
         }
         return findById(id);
     }
+
+    @Override
+    public Optional<CouponTemplate> increaseStock(Long id, Integer increasedStock) {
+        int updatedRows = couponTemplateMapper.update(
+                null,
+                Wrappers.lambdaUpdate(CouponTemplateDO.class)
+                        .setSql("total_stock = total_stock + " + increasedStock)
+                        .set(CouponTemplateDO::getUpdatedAt, LocalDateTime.now())
+                        .eq(CouponTemplateDO::getId, id)
+        );
+        if (updatedRows == 0) {
+            return Optional.empty();
+        }
+        return findById(id);
+    }
 }

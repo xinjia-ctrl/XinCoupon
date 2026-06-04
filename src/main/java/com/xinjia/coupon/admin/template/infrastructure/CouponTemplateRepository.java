@@ -15,4 +15,6 @@ public interface CouponTemplateRepository {
     List<CouponTemplate> findAll();
 
     Optional<CouponTemplate> updateStatus(Long id, CouponTemplateStatus status);
+
+    Optional<CouponTemplate> increaseStock(Long id, Integer increasedStock);
 }

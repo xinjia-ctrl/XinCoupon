@@ -45,4 +45,13 @@ public class InMemoryCouponTemplateRepository implements CouponTemplateRepositor
                     return template;
                 });
     }
+
+    @Override
+    public Optional<CouponTemplate> increaseStock(Long id, Integer increasedStock) {
+        return findById(id)
+                .map(template -> {
+                    template.increaseStock(increasedStock);
+                    return template;
+                });
+    }
 }

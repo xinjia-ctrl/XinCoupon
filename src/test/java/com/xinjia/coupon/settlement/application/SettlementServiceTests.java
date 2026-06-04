@@ -24,9 +24,11 @@ import com.xinjia.coupon.settlement.web.CouponCancelRequest;
 import com.xinjia.coupon.settlement.web.CouponConfirmRequest;
 import com.xinjia.coupon.settlement.web.CouponLockRequest;
 import com.xinjia.coupon.settlement.web.CouponOperationView;
+import com.xinjia.coupon.settlement.web.CouponRefundRequest;
 import com.xinjia.coupon.settlement.web.OrderItemRequest;
 import com.xinjia.coupon.settlement.web.SettlementCalculateRequest;
 import com.xinjia.coupon.settlement.web.SettlementCalculateView;
+import com.xinjia.coupon.settlement.infrastructure.InMemoryCouponSettlementRepository;
 import com.xinjia.coupon.support.InMemoryCampaignStockCache;
 import com.xinjia.coupon.support.RecordingCouponEventPublisher;
 import com.xinjia.coupon.user.coupon.application.UserCouponService;
@@ -59,7 +61,11 @@ class SettlementServiceTests {
                 new InMemoryReceiveRequestRepository(),
                 new RecordingCouponEventPublisher()
         );
-        settlementService = new SettlementService(userCouponService, couponTemplateService);
+        settlementService = new SettlementService(
+                userCouponService,
+                couponTemplateService,
+                new InMemoryCouponSettlementRepository()
+        );
     }
 
     @Test
@@ -166,6 +172,22 @@ class SettlementServiceTests {
         assertThat(result.orderNo()).isNull();
         assertThat(calculateResult.availableCoupons()).hasSize(1);
         assertThat(calculateResult.availableCoupons().get(0).userCouponId()).isEqualTo(userCoupon.getId());
+    }
+
+    @Test
+    void refundShouldReturnUsedCouponToAvailableStatus() {
+        UserCoupon userCoupon = receiveCoupon("settle-req-8", 10L);
+        settlementService.lock(new CouponLockRequest(10L, userCoupon.getId(), "ORDER-REFUND-1"));
+        settlementService.confirm(new CouponConfirmRequest(10L, userCoupon.getId(), "ORDER-REFUND-1"));
+
+        CouponOperationView result = settlementService.refund(new CouponRefundRequest(
+                10L,
+                userCoupon.getId(),
+                "ORDER-REFUND-1"
+        ));
+
+        assertThat(result.status()).isEqualTo(UserCouponStatus.RECEIVED);
+        assertThat(settlementService.calculate(calculateRequest(10L, 1L, 5000L)).availableCoupons()).hasSize(1);
     }
 
     private CouponTemplate createTemplate(Long merchantId, Long thresholdAmount, Long discountAmount) {

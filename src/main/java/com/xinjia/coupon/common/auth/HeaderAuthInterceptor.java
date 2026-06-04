@@ -28,7 +28,7 @@ public class HeaderAuthInterceptor implements HandlerInterceptor {
             authenticateAdmin(request);
             return true;
         }
-        if (path.startsWith("/api/user/") || path.startsWith("/api/settlement/")) {
+        if (path.startsWith("/api/user/") || path.startsWith("/api/settlement/") || path.startsWith("/api/engine/")) {
             authenticateUser(request);
         }
         return true;
