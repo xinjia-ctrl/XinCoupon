@@ -2,9 +2,9 @@
 
 ## 目标
 
-当前项目先保留单体可运行模式，新增分片路由和分表脚本，为后续接入 ShardingSphere 做准备。
+当前项目先保留单体可运行模式，新增用户券动态分表路由和分表脚本，并为后续接入 ShardingSphere 做准备。
 
-本阶段不默认启用分库分表，避免本地启动依赖额外数据源配置；应用启动、测试和核心接口仍然可以按原方式运行。
+本阶段不默认启用分库分表，避免本地启动依赖额外数据源配置；应用启动、测试和核心接口仍然可以按原方式运行。开启 `SHARDING_ENABLED=true` 后，用户券 MyBatis 操作会按 `user_id` 动态改写到 `user_coupon_N`。
 
 ## 分片规则
 
@@ -43,6 +43,12 @@ mysql -h 192.168.100.128 -P 3306 -u root -p xin_coupon < docs\sql\008_sharding_t
 - `user_coupon_1`
 - `coupon_batch_task_0`
 - `coupon_batch_task_1`
+
+## 当前落地点
+
+- `MyBatisPlusConfig` 注册动态表名拦截器。
+- `ShardingTableContext` 保存当前线程的实际表名。
+- `MySqlUserCouponRepository` 按用户 ID 设置 `user_coupon_N` 路由。
 
 ## 后续接 ShardingSphere 的落点
 

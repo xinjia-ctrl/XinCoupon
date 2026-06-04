@@ -236,6 +236,21 @@ POST /api/user/coupons/receive
 }
 ```
 
+### 用户异步领券
+
+```http
+POST /api/user/coupons/receive-mq
+```
+
+默认通过本地事件异步处理；开启 `RECEIVE_ROCKETMQ_ENABLED=true` 后通过 RocketMQ 投递领券请求。
+
+```json
+{
+  "requestId": "receive-mq-20260604-0001",
+  "campaignId": 2001
+}
+```
+
 ### 查询用户券
 
 ```http
@@ -335,6 +350,32 @@ POST /api/search/coupon-templates/rebuild
 ```
 
 用于模拟从数据库或 Binlog 重新构建搜索索引。
+
+### 重放搜索同步事件
+
+```http
+POST /api/search/coupon-templates/sync-events/replay?limit=100
+```
+
+当 `SEARCH_SYNC_MODE=OUTBOX` 时，模板变更会先写入同步日志，调用该接口可重放未消费事件并刷新搜索索引。
+
+## 高级配置
+
+### 搜索同步模式
+
+- `SEARCH_SYNC_MODE=APPLICATION_EVENT`：默认模式，模板变更后直接通过应用事件刷新索引。
+- `SEARCH_SYNC_MODE=OUTBOX`：模板变更写入同步日志，再通过重放接口刷新索引。
+- `SEARCH_SYNC_MODE=CANAL`：通过 Binlog 事件模型模拟 Canal 同步刷新索引。
+
+### 幂等和分布式锁
+
+- `IDEMPOTENT_STORE_TYPE=memory|redis`：管理端防重复提交存储。
+- `MQ_IDEMPOTENT_STORE=mysql|redis`：MQ 消费幂等存储。
+- `DISTRIBUTED_LOCK_TYPE=memory|redis`：结算单状态迁移锁。
+
+### 分片
+
+`SHARDING_ENABLED=true` 后，用户券 MyBatis 操作会通过动态表名路由到 `user_coupon_N`。本地未创建分表时保持默认关闭。
 
 ## 事件说明
 

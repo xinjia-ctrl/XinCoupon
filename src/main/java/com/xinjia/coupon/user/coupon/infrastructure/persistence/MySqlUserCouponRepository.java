@@ -3,10 +3,15 @@ package com.xinjia.coupon.user.coupon.infrastructure.persistence;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.springframework.stereotype.Repository;
 
+import com.xinjia.coupon.common.sharding.CouponShardRouter;
+import com.xinjia.coupon.common.sharding.ShardTarget;
+import com.xinjia.coupon.common.sharding.ShardingProperties;
+import com.xinjia.coupon.common.sharding.ShardingTableContext;
 import com.xinjia.coupon.common.enums.UserCouponStatus;
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 import com.xinjia.coupon.user.coupon.infrastructure.UserCouponRepository;
@@ -16,48 +21,66 @@ public class MySqlUserCouponRepository implements UserCouponRepository {
 
     private final UserCouponMapper userCouponMapper;
     private final UserCouponConverter userCouponConverter;
+    private final CouponShardRouter couponShardRouter;
+    private final ShardingProperties shardingProperties;
 
     public MySqlUserCouponRepository(
             UserCouponMapper userCouponMapper,
-            UserCouponConverter userCouponConverter
+            UserCouponConverter userCouponConverter,
+            CouponShardRouter couponShardRouter,
+            ShardingProperties shardingProperties
     ) {
         this.userCouponMapper = userCouponMapper;
         this.userCouponConverter = userCouponConverter;
+        this.couponShardRouter = couponShardRouter;
+        this.shardingProperties = shardingProperties;
     }
 
     @Override
     public UserCoupon save(UserCoupon userCoupon) {
-        UserCouponDO dataObject = userCouponConverter.toDO(userCoupon);
-        if (dataObject.getId() == null) {
-            userCouponMapper.insert(dataObject);
-            return userCouponConverter.toDomain(dataObject);
-        }
+        return withUserCouponShard(userCoupon.getUserId(), () -> {
+            UserCouponDO dataObject = userCouponConverter.toDO(userCoupon);
+            if (dataObject.getId() == null) {
+                userCouponMapper.insert(dataObject);
+                return userCouponConverter.toDomain(dataObject);
+            }
 
-        userCouponMapper.updateById(dataObject);
-        return findById(dataObject.getId()).orElseGet(() -> userCouponConverter.toDomain(dataObject));
+            userCouponMapper.updateById(dataObject);
+            return Optional.ofNullable(userCouponMapper.selectById(dataObject.getId()))
+                    .map(userCouponConverter::toDomain)
+                    .orElseGet(() -> userCouponConverter.toDomain(dataObject));
+        });
     }
 
     @Override
     public Optional<UserCoupon> findById(Long id) {
-        return Optional.ofNullable(userCouponMapper.selectById(id))
-                .map(userCouponConverter::toDomain);
+        if (!shardingProperties.isEnabled()) {
+            return Optional.ofNullable(userCouponMapper.selectById(id))
+                    .map(userCouponConverter::toDomain);
+        }
+        return IntStream.range(0, shardingProperties.getUserCouponTableCount())
+                .mapToObj(index -> ShardingTableContext.use("user_coupon", "user_coupon_" + index,
+                        () -> Optional.ofNullable(userCouponMapper.selectById(id))
+                                .map(userCouponConverter::toDomain)))
+                .flatMap(Optional::stream)
+                .findFirst();
     }
 
     @Override
     public List<UserCoupon> findByUserId(Long userId) {
-        return userCouponMapper.selectList(
+        return withUserCouponShard(userId, () -> userCouponMapper.selectList(
                         Wrappers.lambdaQuery(UserCouponDO.class)
                                 .eq(UserCouponDO::getUserId, userId)
                                 .orderByDesc(UserCouponDO::getReceivedAt)
                 )
                 .stream()
                 .map(userCouponConverter::toDomain)
-                .toList();
+                .toList());
     }
 
     @Override
     public List<UserCoupon> findByUserIdAndStatus(Long userId, UserCouponStatus status) {
-        return userCouponMapper.selectList(
+        return withUserCouponShard(userId, () -> userCouponMapper.selectList(
                         Wrappers.lambdaQuery(UserCouponDO.class)
                                 .eq(UserCouponDO::getUserId, userId)
                                 .eq(UserCouponDO::getStatus, status.name())
@@ -65,20 +88,28 @@ public class MySqlUserCouponRepository implements UserCouponRepository {
                 )
                 .stream()
                 .map(userCouponConverter::toDomain)
-                .toList();
+                .toList());
     }
 
     @Override
     public long countByUserIdAndCampaignId(Long userId, Long campaignId) {
-        return userCouponMapper.selectCount(
+        return withUserCouponShard(userId, () -> userCouponMapper.selectCount(
                 Wrappers.lambdaQuery(UserCouponDO.class)
                         .eq(UserCouponDO::getUserId, userId)
                         .eq(UserCouponDO::getCampaignId, campaignId)
-        );
+        ));
     }
 
     @Override
     public Optional<UserCoupon> lock(Long id, String orderNo) {
+        Long userId = findById(id).map(UserCoupon::getUserId).orElse(null);
+        if (userId == null) {
+            return Optional.empty();
+        }
+        return withUserCouponShard(userId, () -> doLock(id, orderNo));
+    }
+
+    private Optional<UserCoupon> doLock(Long id, String orderNo) {
         LocalDateTime now = LocalDateTime.now();
         int updatedRows = userCouponMapper.update(
                 null,
@@ -98,6 +129,14 @@ public class MySqlUserCouponRepository implements UserCouponRepository {
 
     @Override
     public Optional<UserCoupon> confirmUse(Long id) {
+        Long userId = findById(id).map(UserCoupon::getUserId).orElse(null);
+        if (userId == null) {
+            return Optional.empty();
+        }
+        return withUserCouponShard(userId, () -> doConfirmUse(id));
+    }
+
+    private Optional<UserCoupon> doConfirmUse(Long id) {
         LocalDateTime now = LocalDateTime.now();
         int updatedRows = userCouponMapper.update(
                 null,
@@ -116,6 +155,14 @@ public class MySqlUserCouponRepository implements UserCouponRepository {
 
     @Override
     public Optional<UserCoupon> release(Long id) {
+        Long userId = findById(id).map(UserCoupon::getUserId).orElse(null);
+        if (userId == null) {
+            return Optional.empty();
+        }
+        return withUserCouponShard(userId, () -> doRelease(id));
+    }
+
+    private Optional<UserCoupon> doRelease(Long id) {
         LocalDateTime now = LocalDateTime.now();
         int updatedRows = userCouponMapper.update(
                 null,
@@ -135,6 +182,14 @@ public class MySqlUserCouponRepository implements UserCouponRepository {
 
     @Override
     public Optional<UserCoupon> refund(Long id) {
+        Long userId = findById(id).map(UserCoupon::getUserId).orElse(null);
+        if (userId == null) {
+            return Optional.empty();
+        }
+        return withUserCouponShard(userId, () -> doRefund(id));
+    }
+
+    private Optional<UserCoupon> doRefund(Long id) {
         LocalDateTime now = LocalDateTime.now();
         int updatedRows = userCouponMapper.update(
                 null,
@@ -151,5 +206,13 @@ public class MySqlUserCouponRepository implements UserCouponRepository {
             return Optional.empty();
         }
         return findById(id);
+    }
+
+    private <T> T withUserCouponShard(Long userId, java.util.function.Supplier<T> supplier) {
+        if (!shardingProperties.isEnabled()) {
+            return supplier.get();
+        }
+        ShardTarget shardTarget = couponShardRouter.routeUserCoupon(userId);
+        return ShardingTableContext.use(shardTarget.logicalTable(), shardTarget.actualTable(), supplier);
     }
 }

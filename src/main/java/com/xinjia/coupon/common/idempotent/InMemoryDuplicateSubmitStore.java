@@ -5,9 +5,11 @@ import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnMissingBean(DuplicateSubmitStore.class)
 public class InMemoryDuplicateSubmitStore implements DuplicateSubmitStore {
 
     private final ConcurrentMap<String, Instant> keys = new ConcurrentHashMap<>();

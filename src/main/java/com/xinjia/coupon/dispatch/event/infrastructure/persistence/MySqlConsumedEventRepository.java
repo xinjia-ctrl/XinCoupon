@@ -3,6 +3,7 @@ package com.xinjia.coupon.dispatch.event.infrastructure.persistence;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
 import com.xinjia.coupon.dispatch.event.application.ConsumedEventRepository;
@@ -10,6 +11,7 @@ import com.xinjia.coupon.dispatch.event.domain.CouponEvent;
 import com.xinjia.coupon.dispatch.event.domain.CouponReceivedEvent;
 
 @Repository
+@ConditionalOnProperty(name = "xincoupon.mq.idempotent-store", havingValue = "mysql", matchIfMissing = true)
 public class MySqlConsumedEventRepository implements ConsumedEventRepository {
 
     private static final String CONSUMED = "CONSUMED";

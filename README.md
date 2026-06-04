@@ -31,14 +31,17 @@ XinCoupon 是一个个人学习性质的优惠券系统 MVP 项目，用于实�
 - 批量发券任务创建和异步执行
 - 批量发券任务分页查询和失败明细记录
 - 用户领券和用户券查询
+- 用户异步领券，默认本地事件，可配置切换 RocketMQ
 - 优惠券模板预约提醒创建、查询和取消
 - Redis 活动库存缓存和 Lua 原子扣减
 - 领券 `requestId` 幂等控制
+- Redis 防重复提交、MQ 消费幂等和分布式锁可选实现
 - 订单优惠试算、结算单锁券、核销、取消释放和退款返还
 - 领券事件发布和消费幂等处理
 - 优惠券模板搜索和索引重建
+- 搜索索引支持应用事件、Outbox 重放和 Canal Binlog 模拟同步模式
 - 优惠券模板布隆过滤器和重复提交防护
-- 用户券和批量发券任务分片路由预置
+- 用户券动态分表路由，可通过配置开启
 - 请求头身份上下文和可开关鉴权拦截器
 - Nacos 服务注册配置，默认关闭，可通过启动参数开启
 - Knife4j 接口文档入口
@@ -78,6 +81,20 @@ mvn spring-boot:run `
 ```powershell
 mvn spring-boot:run `
   "-Dspring-boot.run.jvmArguments=-Dunique-name=ljx123 -Dframework.cache.redis.prefix=ljx123: -Dspring.data.redis.host=<Redis地址> -Dspring.data.redis.port=<Redis端口> -Dspring.data.redis.password=<Redis密码> -Drocketmq.enabled=true -Drocketmq.name-server=<RocketMQ地址> -Drocketmq.producer.group=xin-coupon-producer -Dspring.cloud.nacos.discovery.enabled=true -Dspring.cloud.nacos.discovery.server-addr=<Nacos地址>"
+```
+
+常用能力开关：
+
+```powershell
+mvn spring-boot:run `
+  "-Dspring-boot.run.jvmArguments=-DIDEMPOTENT_STORE_TYPE=redis -DDISTRIBUTED_LOCK_TYPE=redis -DMQ_IDEMPOTENT_STORE=redis -DSEARCH_SYNC_MODE=OUTBOX -DSHARDING_ENABLED=true"
+```
+
+如需让异步领券走 RocketMQ，额外开启：
+
+```powershell
+mvn spring-boot:run `
+  "-Dspring-boot.run.jvmArguments=-DRECEIVE_ROCKETMQ_ENABLED=true -Drocketmq.enabled=true -Drocketmq.name-server=<RocketMQ地址>"
 ```
 
 如需开启请求头鉴权，可以增加以下 JVM 参数：

@@ -50,6 +50,20 @@ xincoupon:
       topic: ${COUPON_EVENT_TOPIC:xin-coupon-event}
       received-tag: ${COUPON_RECEIVED_TAG:coupon-received}
       consumer-group: ${COUPON_EVENT_CONSUMER_GROUP:xin-coupon-event-consumer}
+  search:
+    sync-mode: ${SEARCH_SYNC_MODE:APPLICATION_EVENT}
+  idempotent:
+    store-type: ${IDEMPOTENT_STORE_TYPE:memory}
+  lock:
+    type: ${DISTRIBUTED_LOCK_TYPE:memory}
+  mq:
+    idempotent-store: ${MQ_IDEMPOTENT_STORE:mysql}
+  receive:
+    rocketmq:
+      enabled: ${RECEIVE_ROCKETMQ_ENABLED:false}
+      topic: ${RECEIVE_ROCKETMQ_TOPIC:xin-coupon-receive}
+      tag: ${RECEIVE_ROCKETMQ_TAG:receive-requested}
+      consumer-group: ${RECEIVE_ROCKETMQ_CONSUMER_GROUP:xin-coupon-receive-consumer}
 
 framework:
   cache:

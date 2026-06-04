@@ -34,6 +34,12 @@ public class UserCouponController {
         return ApiResponse.success(UserCouponView.from(userCoupon));
     }
 
+    @PostMapping("/receive-mq")
+    public ApiResponse<CouponReceiveAcceptedView> receiveByMq(@Valid @RequestBody ReceiveCouponRequest request) {
+        Long userId = RequestIdentityResolver.resolveUserId(request.userId());
+        return ApiResponse.success(userCouponService.receiveByMq(request.withUserId(userId)));
+    }
+
     @GetMapping
     public ApiResponse<List<UserCouponView>> listByUserId(
             @RequestParam(required = false) Long userId,

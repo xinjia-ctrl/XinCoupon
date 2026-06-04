@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +17,12 @@ import com.xinjia.coupon.common.enums.UserCouponStatus;
 import com.xinjia.coupon.common.exception.BusinessException;
 import com.xinjia.coupon.dispatch.event.application.CouponEventPublisher;
 import com.xinjia.coupon.dispatch.event.domain.CouponReceivedEvent;
+import com.xinjia.coupon.user.coupon.domain.CouponReceiveRequestedEvent;
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 import com.xinjia.coupon.user.coupon.infrastructure.CampaignStockCache;
 import com.xinjia.coupon.user.coupon.infrastructure.ReceiveRequestRepository;
 import com.xinjia.coupon.user.coupon.infrastructure.UserCouponRepository;
+import com.xinjia.coupon.user.coupon.web.CouponReceiveAcceptedView;
 import com.xinjia.coupon.user.coupon.web.ReceiveCouponRequest;
 
 @Service
@@ -31,6 +34,7 @@ public class UserCouponService {
     private final CampaignStockCache campaignStockCache;
     private final ReceiveRequestRepository receiveRequestRepository;
     private final CouponEventPublisher couponEventPublisher;
+    private final CouponReceiveRequestPublisher couponReceiveRequestPublisher;
 
     public UserCouponService(
             UserCouponRepository userCouponRepository,
@@ -40,18 +44,66 @@ public class UserCouponService {
             ReceiveRequestRepository receiveRequestRepository,
             CouponEventPublisher couponEventPublisher
     ) {
+        this(
+                userCouponRepository,
+                couponCampaignService,
+                couponTemplateService,
+                campaignStockCache,
+                receiveRequestRepository,
+                couponEventPublisher,
+                event -> {
+                }
+        );
+    }
+
+    @Autowired
+    public UserCouponService(
+            UserCouponRepository userCouponRepository,
+            CouponCampaignService couponCampaignService,
+            CouponTemplateService couponTemplateService,
+            CampaignStockCache campaignStockCache,
+            ReceiveRequestRepository receiveRequestRepository,
+            CouponEventPublisher couponEventPublisher,
+            CouponReceiveRequestPublisher couponReceiveRequestPublisher
+    ) {
         this.userCouponRepository = userCouponRepository;
         this.couponCampaignService = couponCampaignService;
         this.couponTemplateService = couponTemplateService;
         this.campaignStockCache = campaignStockCache;
         this.receiveRequestRepository = receiveRequestRepository;
         this.couponEventPublisher = couponEventPublisher;
+        this.couponReceiveRequestPublisher = couponReceiveRequestPublisher;
     }
 
     @Transactional
     public UserCoupon receive(ReceiveCouponRequest request) {
         return receiveRequestRepository.findResult(request.requestId())
                 .orElseGet(() -> doReceive(request));
+    }
+
+    public CouponReceiveAcceptedView receiveByMq(ReceiveCouponRequest request) {
+        receiveRequestRepository.findResult(request.requestId())
+                .ifPresent(userCoupon -> {
+                    throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "领券请求已处理完成，请勿重复提交");
+                });
+        couponCampaignService.ensureReceivable(request.campaignId());
+        String eventId = UUID.randomUUID().toString();
+        OffsetDateTime acceptedAt = OffsetDateTime.now();
+        couponReceiveRequestPublisher.publish(new CouponReceiveRequestedEvent(
+                eventId,
+                request.requestId(),
+                request.userId(),
+                request.campaignId(),
+                acceptedAt
+        ));
+        return new CouponReceiveAcceptedView(
+                eventId,
+                request.requestId(),
+                request.userId(),
+                request.campaignId(),
+                "ACCEPTED",
+                acceptedAt
+        );
     }
 
     private UserCoupon doReceive(ReceiveCouponRequest request) {

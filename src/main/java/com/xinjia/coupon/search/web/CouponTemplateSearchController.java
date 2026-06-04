@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.xinjia.coupon.common.api.ApiResponse;
 import com.xinjia.coupon.common.enums.CouponTemplateStatus;
+import com.xinjia.coupon.search.application.CouponTemplateSearchSyncReplayService;
 import com.xinjia.coupon.search.application.CouponTemplateSearchService;
 import com.xinjia.coupon.search.domain.CouponTemplateSearchDocument;
 
@@ -18,9 +19,14 @@ import com.xinjia.coupon.search.domain.CouponTemplateSearchDocument;
 public class CouponTemplateSearchController {
 
     private final CouponTemplateSearchService couponTemplateSearchService;
+    private final CouponTemplateSearchSyncReplayService couponTemplateSearchSyncReplayService;
 
-    public CouponTemplateSearchController(CouponTemplateSearchService couponTemplateSearchService) {
+    public CouponTemplateSearchController(
+            CouponTemplateSearchService couponTemplateSearchService,
+            CouponTemplateSearchSyncReplayService couponTemplateSearchSyncReplayService
+    ) {
         this.couponTemplateSearchService = couponTemplateSearchService;
+        this.couponTemplateSearchSyncReplayService = couponTemplateSearchSyncReplayService;
     }
 
     @GetMapping
@@ -36,5 +42,13 @@ public class CouponTemplateSearchController {
     public ApiResponse<CouponTemplateSearchRebuildView> rebuild() {
         int indexedCount = couponTemplateSearchService.rebuild();
         return ApiResponse.success(new CouponTemplateSearchRebuildView(indexedCount));
+    }
+
+    @PostMapping("/sync-events/replay")
+    public ApiResponse<CouponTemplateSearchSyncReplayView> replaySyncEvents(
+            @RequestParam(defaultValue = "100") int limit
+    ) {
+        int replayedCount = couponTemplateSearchSyncReplayService.replay(limit);
+        return ApiResponse.success(new CouponTemplateSearchSyncReplayView(replayedCount));
     }
 }

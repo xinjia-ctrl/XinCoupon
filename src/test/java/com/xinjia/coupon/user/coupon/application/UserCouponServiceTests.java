@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +27,7 @@ import com.xinjia.coupon.common.exception.BusinessException;
 import com.xinjia.coupon.dispatch.event.domain.CouponReceivedEvent;
 import com.xinjia.coupon.support.InMemoryCampaignStockCache;
 import com.xinjia.coupon.support.RecordingCouponEventPublisher;
+import com.xinjia.coupon.user.coupon.domain.CouponReceiveRequestedEvent;
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 import com.xinjia.coupon.user.coupon.infrastructure.InMemoryUserCouponRepository;
 import com.xinjia.coupon.user.coupon.infrastructure.InMemoryReceiveRequestRepository;
@@ -152,6 +154,27 @@ class UserCouponServiceTests {
         assertThat(couponEventPublisher.events().get(0).eventType()).isEqualTo("COUPON_RECEIVED");
         assertThat(((CouponReceivedEvent) couponEventPublisher.events().get(0)).userCouponId())
                 .isEqualTo(userCoupon.getId());
+    }
+
+    @Test
+    void receiveByMqShouldPublishReceiveRequestedEvent() {
+        CouponCampaign campaign = createRunningCampaign();
+        List<CouponReceiveRequestedEvent> events = new ArrayList<>();
+        UserCouponService mqService = new UserCouponService(
+                new InMemoryUserCouponRepository(),
+                couponCampaignService,
+                couponTemplateService,
+                campaignStockCache,
+                new InMemoryReceiveRequestRepository(),
+                couponEventPublisher,
+                events::add
+        );
+
+        mqService.receiveByMq(receiveRequest("req-mq", 10L, campaign.getId()));
+
+        assertThat(events).hasSize(1);
+        assertThat(events.get(0).requestId()).isEqualTo("req-mq");
+        assertThat(events.get(0).campaignId()).isEqualTo(campaign.getId());
     }
 
     private ReceiveCouponRequest receiveRequest(String requestId, Long userId, Long campaignId) {
