@@ -9,6 +9,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.xinjia.coupon.admin.template.domain.CouponTemplate;
+import com.xinjia.coupon.admin.template.infrastructure.CouponTemplateBloomFilter;
+import com.xinjia.coupon.admin.template.infrastructure.InMemoryCouponTemplateCache;
 import com.xinjia.coupon.admin.template.infrastructure.InMemoryCouponTemplateRepository;
 import com.xinjia.coupon.admin.template.web.CreateCouponTemplateRequest;
 import com.xinjia.coupon.admin.template.web.IncreaseCouponTemplateStockRequest;
@@ -16,6 +18,7 @@ import com.xinjia.coupon.admin.template.web.UpdateCouponTemplateStatusRequest;
 import com.xinjia.coupon.common.enums.CouponTemplateStatus;
 import com.xinjia.coupon.common.enums.CouponType;
 import com.xinjia.coupon.common.exception.BusinessException;
+import com.xinjia.coupon.common.lock.InMemoryDistributedLockService;
 
 class CouponTemplateServiceTests {
 
@@ -109,6 +112,23 @@ class CouponTemplateServiceTests {
         assertThatThrownBy(() -> couponTemplateService.getById(404L))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage("优惠券模板不存在");
+    }
+
+    @Test
+    void getByIdShouldWriteNullCacheWhenTemplateMissing() {
+        InMemoryCouponTemplateCache cache = new InMemoryCouponTemplateCache();
+        CouponTemplateService service = new CouponTemplateService(
+                new InMemoryCouponTemplateRepository(),
+                CouponTemplateChangePublisher.noop(),
+                CouponTemplateBloomFilter.alwaysMaybe(),
+                cache,
+                new InMemoryDistributedLockService()
+        );
+
+        assertThatThrownBy(() -> service.getById(404L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("优惠券模板不存在");
+        assertThat(cache.isNullValue(404L)).isTrue();
     }
 
     private CreateCouponTemplateRequest validFullReductionRequest() {

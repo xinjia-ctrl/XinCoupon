@@ -133,9 +133,11 @@ public class UserCouponService {
                 template.getValidEndTime()
         );
         UserCoupon saved = userCouponRepository.save(userCoupon);
-        receiveRequestRepository.saveResult(request.requestId(), saved);
-        publishReceivedEvent(saved);
-        return saved;
+        UserCoupon visible = userCouponRepository.findById(saved.getId())
+                .orElseGet(() -> userCouponRepository.save(saved));
+        receiveRequestRepository.saveResult(request.requestId(), visible);
+        publishReceivedEvent(visible);
+        return visible;
     }
 
     private void publishReceivedEvent(UserCoupon userCoupon) {
