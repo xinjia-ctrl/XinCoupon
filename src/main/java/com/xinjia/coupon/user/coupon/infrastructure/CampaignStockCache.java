@@ -8,5 +8,11 @@ public interface CampaignStockCache {
 
     boolean tryDeductStock(Long campaignId);
 
+    StockDeductResult tryDeductStock(Long campaignId, Long userId, Integer perUserLimit);
+
     void restoreStock(Long campaignId);
+
+    default void restoreStock(Long campaignId, Long userId) {
+        restoreStock(campaignId);
+    }
 }

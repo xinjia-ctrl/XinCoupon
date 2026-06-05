@@ -21,6 +21,8 @@ import com.xinjia.coupon.user.coupon.domain.CouponReceiveRequestedEvent;
 import com.xinjia.coupon.user.coupon.domain.UserCoupon;
 import com.xinjia.coupon.user.coupon.infrastructure.CampaignStockCache;
 import com.xinjia.coupon.user.coupon.infrastructure.ReceiveRequestRepository;
+import com.xinjia.coupon.user.coupon.infrastructure.StockDeductResult;
+import com.xinjia.coupon.user.coupon.infrastructure.StockDeductStatus;
 import com.xinjia.coupon.user.coupon.infrastructure.UserCouponRepository;
 import com.xinjia.coupon.user.coupon.web.CouponReceiveAcceptedView;
 import com.xinjia.coupon.user.coupon.web.ReceiveCouponRequest;
@@ -110,12 +112,12 @@ public class UserCouponService {
         couponCampaignService.ensureReceivable(request.campaignId());
         CouponCampaign campaign = couponCampaignService.getById(request.campaignId());
         validateReceiveLimit(request.userId(), campaign);
-        deductStock(campaign.getId());
+        deductStock(request.userId(), campaign);
         try {
             couponCampaignService.deductDatabaseStock(campaign.getId());
             return createUserCoupon(request, campaign);
         } catch (RuntimeException exception) {
-            campaignStockCache.restoreStock(campaign.getId());
+            campaignStockCache.restoreStock(campaign.getId(), request.userId());
             couponCampaignService.restoreDatabaseStock(campaign.getId());
             throw exception;
         }
@@ -217,8 +219,16 @@ public class UserCouponService {
         return userCoupon;
     }
 
-    private void deductStock(Long campaignId) {
-        if (!campaignStockCache.tryDeductStock(campaignId)) {
+    private void deductStock(Long userId, CouponCampaign campaign) {
+        StockDeductResult result = campaignStockCache.tryDeductStock(
+                campaign.getId(),
+                userId,
+                campaign.getPerUserLimit()
+        );
+        if (result.status() == StockDeductStatus.RECEIVE_LIMIT_EXCEEDED) {
+            throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "用户已达到该活动领取上限");
+        }
+        if (!result.success()) {
             throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "活动库存不足");
         }
     }
