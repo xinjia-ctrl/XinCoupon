@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import com.xinjia.coupon.common.mq.NoMQDuplicateConsume;
 import com.xinjia.coupon.dispatch.event.domain.CouponReceivedEvent;
 
 @Component
@@ -19,6 +20,7 @@ public class CouponReceivedEventConsumer {
     }
 
     @EventListener
+    @NoMQDuplicateConsume(key = "'coupon-received:' + #event.eventId()")
     public void handle(CouponReceivedEvent event) {
         if (!consumedEventRepository.markIfAbsent(event)) {
             log.info("跳过重复领券事件, eventId={}", event.eventId());

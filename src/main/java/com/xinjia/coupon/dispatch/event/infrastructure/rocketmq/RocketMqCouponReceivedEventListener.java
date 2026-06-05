@@ -5,6 +5,7 @@ import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import com.xinjia.coupon.common.mq.NoMQDuplicateConsume;
 import com.xinjia.coupon.dispatch.event.application.CouponReceivedEventConsumer;
 import com.xinjia.coupon.dispatch.event.domain.CouponEvent;
 import com.xinjia.coupon.dispatch.event.domain.CouponReceivedEvent;
@@ -30,6 +31,7 @@ public class RocketMqCouponReceivedEventListener implements RocketMQListener<Str
     }
 
     @Override
+    @NoMQDuplicateConsume(key = "'rocketmq:coupon-received:' + #messageBody")
     public void onMessage(String messageBody) {
         CouponEvent event = couponEventMessageConverter.fromMessageBody(messageBody);
         if (event instanceof CouponReceivedEvent receivedEvent) {

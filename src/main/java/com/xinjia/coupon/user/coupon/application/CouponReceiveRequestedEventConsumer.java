@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import com.xinjia.coupon.common.mq.NoMQDuplicateConsume;
 import com.xinjia.coupon.user.coupon.domain.CouponReceiveRequestedEvent;
 import com.xinjia.coupon.user.coupon.web.ReceiveCouponRequest;
 
@@ -20,6 +21,7 @@ public class CouponReceiveRequestedEventConsumer {
     }
 
     @EventListener
+    @NoMQDuplicateConsume(key = "'coupon-receive-request:' + #event.requestId()")
     public void handle(CouponReceiveRequestedEvent event) {
         userCouponService.receive(new ReceiveCouponRequest(
                 event.requestId(),

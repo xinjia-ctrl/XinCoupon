@@ -5,6 +5,7 @@ import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import com.xinjia.coupon.common.mq.NoMQDuplicateConsume;
 import com.xinjia.coupon.user.coupon.application.UserCouponService;
 import com.xinjia.coupon.user.coupon.domain.CouponReceiveRequestedEvent;
 import com.xinjia.coupon.user.coupon.web.ReceiveCouponRequest;
@@ -24,6 +25,7 @@ public class RocketMqCouponReceiveRequestedEventListener implements RocketMQList
     }
 
     @Override
+    @NoMQDuplicateConsume(key = "'rocketmq:coupon-receive-request:' + #event.requestId()")
     public void onMessage(CouponReceiveRequestedEvent event) {
         userCouponService.receive(new ReceiveCouponRequest(
                 event.requestId(),
