@@ -43,6 +43,7 @@ xincoupon:
     admin-token: ${AUTH_ADMIN_TOKEN:xin-coupon-admin}
   sharding:
     enabled: ${SHARDING_ENABLED:false}
+    mode: ${SHARDING_MODE:MANUAL}
     user-coupon-table-count: ${USER_COUPON_TABLE_COUNT:2}
     coupon-batch-task-table-count: ${COUPON_BATCH_TASK_TABLE_COUNT:2}
   dispatch:

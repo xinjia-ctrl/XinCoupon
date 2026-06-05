@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ShardingProperties {
 
     private boolean enabled = false;
+    private ShardingMode mode = ShardingMode.MANUAL;
     private int userCouponTableCount = 2;
     private int couponBatchTaskTableCount = 2;
 
@@ -15,6 +16,22 @@ public class ShardingProperties {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public ShardingMode getMode() {
+        return mode;
+    }
+
+    public void setMode(ShardingMode mode) {
+        this.mode = mode;
+    }
+
+    public boolean isManualEnabled() {
+        return enabled && mode == ShardingMode.MANUAL;
+    }
+
+    public boolean isShardingSphereEnabled() {
+        return enabled && mode == ShardingMode.SHARDINGSPHERE;
     }
 
     public int getUserCouponTableCount() {
@@ -31,5 +48,10 @@ public class ShardingProperties {
 
     public void setCouponBatchTaskTableCount(int couponBatchTaskTableCount) {
         this.couponBatchTaskTableCount = couponBatchTaskTableCount;
+    }
+
+    public enum ShardingMode {
+        MANUAL,
+        SHARDINGSPHERE
     }
 }

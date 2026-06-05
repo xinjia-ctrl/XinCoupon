@@ -54,7 +54,7 @@ public class MySqlUserCouponRepository implements UserCouponRepository {
 
     @Override
     public Optional<UserCoupon> findById(Long id) {
-        if (!shardingProperties.isEnabled()) {
+        if (!shardingProperties.isManualEnabled()) {
             return Optional.ofNullable(userCouponMapper.selectById(id))
                     .map(userCouponConverter::toDomain);
         }
@@ -209,7 +209,7 @@ public class MySqlUserCouponRepository implements UserCouponRepository {
     }
 
     private <T> T withUserCouponShard(Long userId, java.util.function.Supplier<T> supplier) {
-        if (!shardingProperties.isEnabled()) {
+        if (!shardingProperties.isManualEnabled()) {
             return supplier.get();
         }
         ShardTarget shardTarget = couponShardRouter.routeUserCoupon(userId);

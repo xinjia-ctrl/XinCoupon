@@ -1,0 +1,37 @@
+databaseName: xin_coupon
+
+dataSources:
+  ds_0:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://$${MYSQL_HOST::localhost}:$${MYSQL_PORT::3306}/$${MYSQL_DATABASE::xin_coupon}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: $${MYSQL_USERNAME::root}
+    password: $${MYSQL_PASSWORD::}
+
+rules:
+  - !SHARDING
+    tables:
+      user_coupon:
+        actualDataNodes: ds_0.user_coupon_$->{0..1}
+        tableStrategy:
+          standard:
+            shardingColumn: user_id
+            shardingAlgorithmName: user_coupon_inline
+      coupon_batch_task:
+        actualDataNodes: ds_0.coupon_batch_task_$->{0..1}
+        tableStrategy:
+          standard:
+            shardingColumn: batch_no
+            shardingAlgorithmName: coupon_batch_task_hash
+    shardingAlgorithms:
+      user_coupon_inline:
+        type: INLINE
+        props:
+          algorithm-expression: user_coupon_$->{user_id % 2}
+      coupon_batch_task_hash:
+        type: HASH_MOD
+        props:
+          sharding-count: 2
+
+props:
+  sql-show: $${SHARDINGSPHERE_SQL_SHOW::false}

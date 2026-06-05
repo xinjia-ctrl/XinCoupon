@@ -28,7 +28,7 @@ public class MyBatisPlusConfig {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         DynamicTableNameInnerInterceptor dynamicTableNameInnerInterceptor = new DynamicTableNameInnerInterceptor();
         dynamicTableNameInnerInterceptor.setTableNameHandler((sql, tableName) -> {
-            if (!shardingProperties.isEnabled()) {
+            if (!shardingProperties.isManualEnabled()) {
                 return tableName;
             }
             return ShardingTableContext.resolve(tableName);
