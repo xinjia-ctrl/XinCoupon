@@ -70,6 +70,27 @@ class CouponTemplateSearchServiceTests {
                 .containsExactly(3001L);
     }
 
+    @Test
+    void searchIndexShouldDeleteTemplateDocument() {
+        CouponTemplate template = CouponTemplate.create(
+                3L,
+                "删除同步券",
+                CouponType.CASH,
+                100L,
+                null,
+                0L,
+                OffsetDateTime.now().plusDays(1),
+                OffsetDateTime.now().plusDays(10),
+                100
+        );
+        template.assignId(3002L);
+        searchIndex.save(CouponTemplateSearchDocument.from(template));
+
+        searchIndex.delete(3002L);
+
+        assertThat(couponTemplateSearchService.search("删除同步", null, null)).isEmpty();
+    }
+
     private CreateCouponTemplateRequest templateRequest(String title, Long merchantId) {
         return new CreateCouponTemplateRequest(
                 merchantId,

@@ -17,6 +17,7 @@ public class CouponTemplateCanalSyncConsumer {
     @EventListener
     public void handle(CouponTemplateBinlogEvent event) {
         if ("DELETE".equalsIgnoreCase(event.operation())) {
+            couponTemplateSearchIndex.delete(event.templateId());
             return;
         }
         couponTemplateSearchIndex.save(event.document());

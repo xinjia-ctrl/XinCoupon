@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
@@ -14,6 +15,7 @@ import com.xinjia.coupon.common.enums.CouponTemplateStatus;
 import com.xinjia.coupon.search.domain.CouponTemplateSearchDocument;
 
 @Repository
+@ConditionalOnProperty(name = "xincoupon.search.index-type", havingValue = "MEMORY", matchIfMissing = true)
 public class InMemoryCouponTemplateSearchIndex implements CouponTemplateSearchIndex {
 
     private final ConcurrentMap<Long, CouponTemplateSearchDocument> documents = new ConcurrentHashMap<>();
@@ -21,6 +23,11 @@ public class InMemoryCouponTemplateSearchIndex implements CouponTemplateSearchIn
     @Override
     public void save(CouponTemplateSearchDocument document) {
         documents.put(document.templateId(), document);
+    }
+
+    @Override
+    public void delete(Long templateId) {
+        documents.remove(templateId);
     }
 
     @Override

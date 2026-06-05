@@ -53,6 +53,20 @@ xincoupon:
       consumer-group: ${COUPON_EVENT_CONSUMER_GROUP:xin-coupon-event-consumer}
   search:
     sync-mode: ${SEARCH_SYNC_MODE:APPLICATION_EVENT}
+    index-type: ${SEARCH_INDEX_TYPE:MEMORY}
+    elasticsearch:
+      url: ${ELASTICSEARCH_URL:http://localhost:9200}
+      index-name: ${ELASTICSEARCH_COUPON_TEMPLATE_INDEX:coupon_template}
+    canal:
+      enabled: ${CANAL_ENABLED:false}
+      host: ${CANAL_HOST:localhost}
+      port: ${CANAL_PORT:11111}
+      destination: ${CANAL_DESTINATION:example}
+      username: ${CANAL_USERNAME:}
+      password: ${CANAL_PASSWORD:}
+      filter: ${CANAL_FILTER:xin_coupon.coupon_template}
+      batch-size: ${CANAL_BATCH_SIZE:100}
+      empty-sleep-millis: ${CANAL_EMPTY_SLEEP_MILLIS:1000}
   idempotent:
     store-type: ${IDEMPOTENT_STORE_TYPE:memory}
   lock:

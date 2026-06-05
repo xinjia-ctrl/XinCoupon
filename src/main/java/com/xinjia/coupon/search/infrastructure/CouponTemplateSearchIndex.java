@@ -10,6 +10,9 @@ public interface CouponTemplateSearchIndex {
 
     void save(CouponTemplateSearchDocument document);
 
+    default void delete(Long templateId) {
+    }
+
     void replaceAll(Collection<CouponTemplateSearchDocument> documents);
 
     List<CouponTemplateSearchDocument> search(String keyword, Long merchantId, CouponTemplateStatus status);

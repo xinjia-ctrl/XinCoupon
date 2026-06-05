@@ -33,7 +33,7 @@ public class CouponTemplateSearchSyncPublisher implements CouponTemplateChangePu
             return;
         }
         if (searchSyncProperties.getSyncMode() == SyncMode.CANAL) {
-            applicationEventPublisher.publishEvent(new CouponTemplateBinlogEvent("UPSERT", document));
+            applicationEventPublisher.publishEvent(CouponTemplateBinlogEvent.upsert(document));
             return;
         }
         applicationEventPublisher.publishEvent(new CouponTemplateSearchSyncEvent(document));
