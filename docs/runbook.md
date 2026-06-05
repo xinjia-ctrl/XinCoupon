@@ -75,3 +75,11 @@ mvn test
 ```powershell
 rg "真实密码|明文密码|私有令牌" README.md docs src/main/resources
 ```
+
+## 7. 领券链路压测
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\benchmark-receive.ps1 -CampaignId 2001 -TotalRequests 10000 -Concurrency 200
+```
+
+压测脚本会输出 QPS、成功率和延迟分位数，报告模板见 `docs/performance/qps-report.md`。
