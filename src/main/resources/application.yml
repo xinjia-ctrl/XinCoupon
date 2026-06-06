@@ -79,6 +79,9 @@ xincoupon:
       topic: ${RECEIVE_ROCKETMQ_TOPIC:xin-coupon-receive}
       tag: ${RECEIVE_ROCKETMQ_TAG:receive-requested}
       consumer-group: ${RECEIVE_ROCKETMQ_CONSUMER_GROUP:xin-coupon-receive-consumer}
+  batch:
+    staging:
+      store-type: ${BATCH_STAGING_STORE:redis}
 
 framework:
   cache:

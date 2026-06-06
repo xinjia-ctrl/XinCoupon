@@ -10,6 +10,12 @@ public interface UserCouponRepository {
 
     UserCoupon save(UserCoupon userCoupon);
 
+    default List<UserCoupon> saveBatch(List<UserCoupon> userCoupons) {
+        return userCoupons.stream()
+                .map(this::save)
+                .toList();
+    }
+
     Optional<UserCoupon> findById(Long id);
 
     List<UserCoupon> findByUserId(Long userId);

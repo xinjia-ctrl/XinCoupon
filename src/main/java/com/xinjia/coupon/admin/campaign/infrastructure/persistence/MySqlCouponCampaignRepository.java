@@ -84,12 +84,45 @@ public class MySqlCouponCampaignRepository implements CouponCampaignRepository {
     }
 
     @Override
+    public boolean tryDeductStock(Long id, int count) {
+        if (count <= 0) {
+            return true;
+        }
+        int updatedRows = couponCampaignMapper.update(
+                null,
+                Wrappers.lambdaUpdate(CouponCampaignDO.class)
+                        .setSql("available_stock = available_stock - " + count)
+                        .setSql("received_count = received_count + " + count)
+                        .set(CouponCampaignDO::getUpdatedAt, LocalDateTime.now())
+                        .eq(CouponCampaignDO::getId, id)
+                        .ge(CouponCampaignDO::getAvailableStock, count)
+        );
+        return updatedRows > 0;
+    }
+
+    @Override
     public void restoreStock(Long id) {
         couponCampaignMapper.update(
                 null,
                 Wrappers.lambdaUpdate(CouponCampaignDO.class)
                         .setSql("available_stock = available_stock + 1")
                         .setSql("received_count = case when received_count > 0 then received_count - 1 else 0 end")
+                        .set(CouponCampaignDO::getUpdatedAt, LocalDateTime.now())
+                        .eq(CouponCampaignDO::getId, id)
+        );
+    }
+
+    @Override
+    public void restoreStock(Long id, int count) {
+        if (count <= 0) {
+            return;
+        }
+        couponCampaignMapper.update(
+                null,
+                Wrappers.lambdaUpdate(CouponCampaignDO.class)
+                        .setSql("available_stock = available_stock + " + count)
+                        .setSql("received_count = case when received_count >= " + count
+                                + " then received_count - " + count + " else 0 end")
                         .set(CouponCampaignDO::getUpdatedAt, LocalDateTime.now())
                         .eq(CouponCampaignDO::getId, id)
         );

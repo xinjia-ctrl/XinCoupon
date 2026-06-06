@@ -1,8 +1,11 @@
 package com.xinjia.coupon.user.coupon.infrastructure.persistence;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -50,6 +53,35 @@ public class MySqlUserCouponRepository implements UserCouponRepository {
                     .map(userCouponConverter::toDomain)
                     .orElseGet(() -> userCouponConverter.toDomain(dataObject));
         });
+    }
+
+    @Override
+    public List<UserCoupon> saveBatch(List<UserCoupon> userCoupons) {
+        if (userCoupons.isEmpty()) {
+            return List.of();
+        }
+        if (!shardingProperties.isManualEnabled()) {
+            return doSaveBatch(userCoupons);
+        }
+        List<UserCoupon> savedCoupons = new ArrayList<>(userCoupons.size());
+        Map<ShardTarget, List<UserCoupon>> couponsByShard = userCoupons.stream()
+                .collect(Collectors.groupingBy(coupon -> couponShardRouter.routeUserCoupon(coupon.getUserId())));
+        couponsByShard.forEach((shardTarget, shardCoupons) -> savedCoupons.addAll(ShardingTableContext.use(
+                shardTarget.logicalTable(),
+                shardTarget.actualTable(),
+                () -> doSaveBatch(shardCoupons)
+        )));
+        return savedCoupons;
+    }
+
+    private List<UserCoupon> doSaveBatch(List<UserCoupon> userCoupons) {
+        List<UserCouponDO> dataObjects = userCoupons.stream()
+                .map(userCouponConverter::toDO)
+                .toList();
+        userCouponMapper.insert(dataObjects, dataObjects.size());
+        return dataObjects.stream()
+                .map(userCouponConverter::toDomain)
+                .toList();
     }
 
     @Override

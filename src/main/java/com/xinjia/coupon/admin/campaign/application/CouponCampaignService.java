@@ -101,8 +101,20 @@ public class CouponCampaignService {
     }
 
     @Transactional
+    public void deductDatabaseStock(Long campaignId, int count) {
+        if (!couponCampaignRepository.tryDeductStock(campaignId, count)) {
+            throw new BusinessException(ErrorCode.BUSINESS_REJECTED, "活动库存不足");
+        }
+    }
+
+    @Transactional
     public void restoreDatabaseStock(Long campaignId) {
         couponCampaignRepository.restoreStock(campaignId);
+    }
+
+    @Transactional
+    public void restoreDatabaseStock(Long campaignId, int count) {
+        couponCampaignRepository.restoreStock(campaignId, count);
     }
 
     private void validateTimeRange(CreateCouponCampaignRequest request) {

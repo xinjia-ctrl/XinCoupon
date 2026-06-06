@@ -19,7 +19,6 @@ import com.xinjia.coupon.distribution.task.infrastructure.CouponBatchTaskFailure
 import com.xinjia.coupon.distribution.task.infrastructure.CouponBatchTaskRepository;
 import com.xinjia.coupon.distribution.task.web.CreateCouponBatchTaskRequest;
 import com.xinjia.coupon.user.coupon.application.UserCouponService;
-import com.xinjia.coupon.user.coupon.web.ReceiveCouponRequest;
 
 @Service
 public class CouponBatchTaskService {
@@ -28,9 +27,9 @@ public class CouponBatchTaskService {
 
     private final CouponBatchTaskRepository couponBatchTaskRepository;
     private final CouponBatchTaskFailureRepository couponBatchTaskFailureRepository;
-    private final UserCouponService userCouponService;
     private final CouponBatchTaskExcelReader couponBatchTaskExcelReader;
     private final CouponBatchTaskFailureExcelExporter couponBatchTaskFailureExcelExporter;
+    private final CouponBatchIssueProcessor couponBatchIssueProcessor;
 
     public CouponBatchTaskService(
             CouponBatchTaskRepository couponBatchTaskRepository,
@@ -40,7 +39,7 @@ public class CouponBatchTaskService {
         this(
                 couponBatchTaskRepository,
                 couponBatchTaskFailureRepository,
-                userCouponService,
+                new LegacyCouponBatchIssueProcessor(userCouponService),
                 new CouponBatchTaskExcelReader(),
                 new CouponBatchTaskFailureExcelExporter()
         );
@@ -50,15 +49,15 @@ public class CouponBatchTaskService {
     public CouponBatchTaskService(
             CouponBatchTaskRepository couponBatchTaskRepository,
             CouponBatchTaskFailureRepository couponBatchTaskFailureRepository,
-            UserCouponService userCouponService,
+            CouponBatchIssueProcessor couponBatchIssueProcessor,
             CouponBatchTaskExcelReader couponBatchTaskExcelReader,
             CouponBatchTaskFailureExcelExporter couponBatchTaskFailureExcelExporter
     ) {
         this.couponBatchTaskRepository = couponBatchTaskRepository;
         this.couponBatchTaskFailureRepository = couponBatchTaskFailureRepository;
-        this.userCouponService = userCouponService;
         this.couponBatchTaskExcelReader = couponBatchTaskExcelReader;
         this.couponBatchTaskFailureExcelExporter = couponBatchTaskFailureExcelExporter;
+        this.couponBatchIssueProcessor = couponBatchIssueProcessor;
     }
 
     @Transactional
@@ -107,30 +106,24 @@ public class CouponBatchTaskService {
     }
 
     private void executeBatch(CouponBatchTask task, List<Long> userIds, int offset) {
+        List<BatchUserRow> rows = new java.util.ArrayList<>(userIds.size());
         for (int index = 0; index < userIds.size(); index++) {
-            Long userId = userIds.get(index);
-            try {
-                receiveOne(task, userId);
-                task.recordSuccess();
-            } catch (RuntimeException exception) {
-                task.recordFailure();
-                couponBatchTaskFailureRepository.save(CouponBatchTaskFailure.create(
-                        task.getId(),
-                        task.getBatchNo(),
-                        userId,
-                        offset + index + 1,
-                        exception.getMessage()
-                ));
-            }
+            rows.add(new BatchUserRow(userIds.get(index), offset + index + 1));
         }
-    }
-
-    private void receiveOne(CouponBatchTask task, Long userId) {
-        userCouponService.receive(new ReceiveCouponRequest(
-                task.getBatchNo() + "-" + userId,
-                userId,
-                task.getCampaignId()
-        ));
+        BatchIssueResult result = couponBatchIssueProcessor.issue(task, rows);
+        for (int i = 0; i < result.successCount(); i++) {
+            task.recordSuccess();
+        }
+        for (BatchIssueFailure failure : result.failures()) {
+            task.recordFailure();
+            couponBatchTaskFailureRepository.save(CouponBatchTaskFailure.create(
+                    task.getId(),
+                    task.getBatchNo(),
+                    failure.userId(),
+                    failure.rowNumber(),
+                    failure.reason()
+            ));
+        }
     }
 
     @Transactional(readOnly = true)

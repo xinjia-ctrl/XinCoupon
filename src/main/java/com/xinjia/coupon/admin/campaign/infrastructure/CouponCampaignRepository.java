@@ -18,5 +18,26 @@ public interface CouponCampaignRepository {
 
     boolean tryDeductStock(Long id);
 
+    default boolean tryDeductStock(Long id, int count) {
+        if (count <= 0) {
+            return true;
+        }
+        for (int i = 0; i < count; i++) {
+            if (!tryDeductStock(id)) {
+                for (int j = 0; j < i; j++) {
+                    restoreStock(id);
+                }
+                return false;
+            }
+        }
+        return true;
+    }
+
     void restoreStock(Long id);
+
+    default void restoreStock(Long id, int count) {
+        for (int i = 0; i < count; i++) {
+            restoreStock(id);
+        }
+    }
 }
